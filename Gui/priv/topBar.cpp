@@ -19,7 +19,7 @@ TopBar::TopBar(QWidget* parent)
     ssbBanner->setFixedSize(48, 48);
     ssbBanner->setStyleSheet("background: transparent; border: none; padding: 0;");
 
-    QPixmap pix("icons/SBB_logo.svg"); 
+    QPixmap pix("icons/SBB_logo.svg");  
     if (!pix.isNull()) {
         ssbBanner->setPixmap(pix.scaled(ssbBanner->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
     }
