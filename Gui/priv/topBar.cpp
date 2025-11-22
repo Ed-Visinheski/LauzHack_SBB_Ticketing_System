@@ -6,10 +6,6 @@ TopBar::TopBar(QWidget* parent)
     // Red SSB background
     setStyleSheet("background-color: #ec0001");
 
-    // SBB Banner behind Red Background
-    // auto ssbBanner = new QPushButton(QIcon(QString("icons/SBB_logo.svg")), QString{}, this);
-
-    // Layout with equal spacing: stretch segments around and between buttons
     auto layout = new QHBoxLayout(this);
     layout->setContentsMargins(16, 12, 16, 12); // left, top, right, bottom padding
     layout->setSpacing(0);

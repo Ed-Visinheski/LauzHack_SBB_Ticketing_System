@@ -1,5 +1,4 @@
 #include <QApplication>
-#include "style.h"
 
 #include "window.h"
 #include "PgpKeyManager.h"

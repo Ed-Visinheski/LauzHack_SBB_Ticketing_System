@@ -12,7 +12,6 @@ NavBar::NavBar(QWidget* parent)
     // Light grey background
     setStyleSheet("background-color: #f0f0f0;");
 
-    // Buttons A, B, C
     auto homeButton = new QPushButton(QIcon(QString("Icons/magnifying-glass_24px.png")), QString{}, this);
     auto ticketButton = new QPushButton(QIcon("Icons/ticket_24px.png"), QString{}, this);
     auto idButton = new QPushButton(QIcon("Icons/user_24px.png"), QString{}, this);
@@ -22,9 +21,9 @@ NavBar::NavBar(QWidget* parent)
     ticketButton->setFixedSize(80, 40);
     idButton->setFixedSize(80, 40);
 
-    // Layout with equal spacing: stretch segments around and between buttons
+    
     auto layout = new QHBoxLayout(this);
-    layout->setContentsMargins(16, 12, 16, 12); // left, top, right, bottom padding 
+    layout->setContentsMargins(16, 12, 16, 12);
     layout->setSpacing(0);
 
     layout->addStretch(1);

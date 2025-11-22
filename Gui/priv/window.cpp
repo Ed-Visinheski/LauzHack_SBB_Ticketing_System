@@ -8,7 +8,6 @@ Window::Window(QWidget* parent)
     // Fixed window size (width x height)
     setFixedSize(SCREEN_WIDTH, SCREEN_HEIGHT);
 
-    // White background
     QPalette pal = palette();
     pal.setColor(QPalette::Window, Qt::white);
     setAutoFillBackground(true); 
@@ -33,7 +32,7 @@ Window::Window(QWidget* parent)
     auto navBarLayout = new QVBoxLayout(this);
     navBarLayout->setContentsMargins(0, 0, 0, 0);
     navBarLayout->setSpacing(0);
-    navBarLayout->addStretch();      // push nav bar to bottom
+    navBarLayout->addStretch();
     navBarLayout->addWidget(navBar_);
 
     pageLayout->addLayout(topBarLayout);
