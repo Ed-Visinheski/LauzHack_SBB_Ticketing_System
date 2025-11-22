@@ -1,5 +1,6 @@
 #pragma once
 #include <QWidget>
+#include <QIcon>
 
 class NavBar : public QWidget
 {
