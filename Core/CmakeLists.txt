@@ -6,7 +6,7 @@ file(GLOB_RECURSE CORE_PUB_SOURCES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}
 if(CORE_PUB_SOURCES)
     add_library(core STATIC ${CORE_PUB_SOURCES})
 
-    # Public headers (API) live in 'pub', private headers in 'priv'
+    # Public headers (API) live in 'pub', private headers in 'priv' 
     target_include_directories(core
         PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/pub
         PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/priv

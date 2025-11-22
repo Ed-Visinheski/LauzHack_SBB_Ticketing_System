@@ -8,7 +8,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # place built executable in build/bin
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-# build libraries in subdirectories
+# build libraries in subdirectoriess
 add_subdirectory(Core)
 add_subdirectory(Gui)
 

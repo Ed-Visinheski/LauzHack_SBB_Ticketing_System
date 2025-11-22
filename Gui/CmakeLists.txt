@@ -5,7 +5,7 @@ file(GLOB_RECURSE GUI_PUB_SOURCES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/
 
 if(NOT GUI_PUB_SOURCES)
     message(WARNING "No source files found in ${CMAKE_CURRENT_SOURCE_DIR}/pub for target 'gui'. If this is expected, ignore this warning.")
-endif()
+endif() 
 
 add_library(gui STATIC ${GUI_PUB_SOURCES})
 
