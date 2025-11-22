@@ -1,6 +1,7 @@
 #pragma once
 #include "definitions.h"
 #include <QWidget>
+#include <QStackedWidget>
 #include "navBar.h"
 #include "topBar.h"
 
@@ -11,5 +12,9 @@ public:
 
 private:
     NavBar* navBar_ = nullptr; 
-    TopBar* topBar_ = nullptr; 
+    TopBar* topBar_ = nullptr;
+    QStackedWidget* stacked_ = nullptr;
+    QWidget* homePage_ = nullptr;
+    QWidget* ticketPage_ = nullptr;
+    QWidget* idPage_ = nullptr;
 }; 

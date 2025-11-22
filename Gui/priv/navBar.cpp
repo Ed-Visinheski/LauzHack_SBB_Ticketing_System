@@ -12,14 +12,14 @@ NavBar::NavBar(QWidget* parent)
     // Light grey background
     setStyleSheet("background-color: #f0f0f0;");
 
-    auto homeButton = new QPushButton(QIcon(QString("Icons/magnifying-glass_24px.png")), QString{}, this);
-    auto ticketButton = new QPushButton(QIcon("Icons/ticket_24px.png"), QString{}, this);
-    auto idButton = new QPushButton(QIcon("Icons/user_24px.png"), QString{}, this);
+    homeButton_ = new QPushButton(QIcon(QString("Icons/magnifying-glass_24px.png")), QString{}, this);
+    ticketButton_ = new QPushButton(QIcon("Icons/ticket_24px.png"), QString{}, this);
+    idButton_ = new QPushButton(QIcon("Icons/user_24px.png"), QString{}, this);
 
     // Optional: set uniform size for buttons
-    homeButton->setFixedSize(80, 40);
-    ticketButton->setFixedSize(80, 40);
-    idButton->setFixedSize(80, 40);
+    homeButton_->setFixedSize(80, 40);
+    ticketButton_->setFixedSize(80, 40);
+    idButton_->setFixedSize(80, 40);
 
     
     auto layout = new QHBoxLayout(this);
@@ -27,12 +27,17 @@ NavBar::NavBar(QWidget* parent)
     layout->setSpacing(0);
 
     layout->addStretch(1);
-    layout->addWidget(homeButton, 0, Qt::AlignCenter);
+    layout->addWidget(homeButton_, 0, Qt::AlignCenter);
     layout->addStretch(1);
-    layout->addWidget(ticketButton, 0, Qt::AlignCenter);
+    layout->addWidget(ticketButton_, 0, Qt::AlignCenter);
     layout->addStretch(1);
-    layout->addWidget(idButton, 0, Qt::AlignCenter);
+    layout->addWidget(idButton_, 0, Qt::AlignCenter);
     layout->addStretch(1);
 
     setLayout(layout);
+
+    // Forward button clicks as signals
+    connect(homeButton_, &QPushButton::clicked, this, &NavBar::homeClicked);
+    connect(ticketButton_, &QPushButton::clicked, this, &NavBar::ticketClicked);
+    connect(idButton_, &QPushButton::clicked, this, &NavBar::idClicked);
 }
