@@ -14,14 +14,12 @@ TopBar::TopBar(QWidget* parent)
     layout->setContentsMargins(16, 12, 16, 12); // left, top, right, bottom padding
     layout->setSpacing(0);
 
-    // layout->addStretch(1);
-
     auto ssbBanner = new QLabel(this);
     ssbBanner->setAlignment(Qt::AlignCenter);
     ssbBanner->setFixedSize(48, 48);
     ssbBanner->setStyleSheet("background: transparent; border: none; padding: 0;");
 
-    QPixmap pix("icons/SBB_logo.svg");
+    QPixmap pix("icons/SBB_logo.svg"); 
     if (!pix.isNull()) {
         ssbBanner->setPixmap(pix.scaled(ssbBanner->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
     }

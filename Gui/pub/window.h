@@ -10,6 +10,6 @@ public:
     explicit Window(QWidget* parent = nullptr);
 
 private:
-    NavBar* navBar_ = nullptr;
-    TopBar* topBar_ = nullptr;
-};
+    NavBar* navBar_ = nullptr; //Bottom bar
+    TopBar* topBar_ = nullptr; //top bar
+}; 

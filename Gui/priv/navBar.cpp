@@ -18,7 +18,7 @@ NavBar::NavBar(QWidget* parent)
 
     // Layout with equal spacing: stretch segments around and between buttons
     auto layout = new QHBoxLayout(this);
-    layout->setContentsMargins(16, 12, 16, 12); // left, top, right, bottom padding
+    layout->setContentsMargins(16, 12, 16, 12); // left, top, right, bottom padding 
     layout->setSpacing(0);
 
     layout->addStretch(1);

@@ -11,7 +11,7 @@ Window::Window(QWidget* parent)
     // White background
     QPalette pal = palette();
     pal.setColor(QPalette::Window, Qt::white);
-    setAutoFillBackground(true);
+    setAutoFillBackground(true); 
     setPalette(pal);
 
     // Create nav bar and place it at the bottom using a layout
