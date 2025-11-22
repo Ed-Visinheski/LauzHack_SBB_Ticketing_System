@@ -17,11 +17,28 @@ Window::Window(QWidget* parent)
     // Create nav bar and place it at the bottom using a layout
     navBar_ = new NavBar(this);
     navBar_->setFixedHeight(64);
+    
+    topBar_ = new TopBar(this);
+    topBar_->setFixedHeight(64);
 
-    auto layout = new QVBoxLayout(this);
-    layout->setContentsMargins(0, 0, 0, 0);
-    layout->setSpacing(0);
-    layout->addStretch();      // push nav bar to bottom
-    layout->addWidget(navBar_);
-    setLayout(layout);
+    auto pageLayout = new QVBoxLayout(this);
+    pageLayout->setContentsMargins(0, 0, 0, 0);
+    pageLayout->setSpacing(0);
+
+    auto topBarLayout = new QVBoxLayout(this);
+    topBarLayout->setContentsMargins(0, 0, 0, 0);
+    topBarLayout->setSpacing(0);
+    topBarLayout->addWidget(topBar_);
+
+    auto navBarLayout = new QVBoxLayout(this);
+    navBarLayout->setContentsMargins(0, 0, 0, 0);
+    navBarLayout->setSpacing(0);
+    navBarLayout->addStretch();      // push nav bar to bottom
+    navBarLayout->addWidget(navBar_);
+
+    pageLayout->addLayout(topBarLayout);
+    pageLayout->addLayout(navBarLayout);
+
+
+    setLayout(pageLayout);
 }
