@@ -1,8 +1,7 @@
 #pragma once
 #include "definitions.h"
 #include <QWidget>
-#include "topBar.h"
-
+#include "navBar.h"
 
 class Window : public QWidget
 {
@@ -11,5 +10,4 @@ public:
 
 private:
     NavBar* navBar_ = nullptr;
-    TopBar* topBar_ = nullptr;
 };

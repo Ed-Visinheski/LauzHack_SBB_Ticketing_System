@@ -1,4 +1,10 @@
 #include "navBar.h"
+#include <QPushButton>
+#include <QHBoxLayout>
+
+#include <filesystem>
+#include <iostream>
+namespace fs = std::filesystem;
 
 NavBar::NavBar(QWidget* parent)
     : QWidget(parent)
