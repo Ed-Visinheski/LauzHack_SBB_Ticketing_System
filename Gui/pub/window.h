@@ -1,0 +1,13 @@
+#pragma once
+#include "definitions.h"
+#include <QWidget>
+#include "navBar.h"
+
+class Window : public QWidget
+{
+public:
+    explicit Window(QWidget* parent = nullptr);
+
+private:
+    NavBar* navBar_ = nullptr;
+};
