@@ -1,0 +1,25 @@
+cmake_minimum_required(VERSION 3.15)
+
+# Create a static library target for Core using sources from pub/*.cpp
+file(GLOB_RECURSE CORE_PUB_SOURCES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/pub/*.cpp)
+
+if(CORE_PUB_SOURCES)
+    add_library(core STATIC ${CORE_PUB_SOURCES})
+
+    # Public headers (API) live in 'pub', private headers in 'priv'
+    target_include_directories(core
+        PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/pub
+        PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/priv
+    )
+
+    # Inherit C++ standard from parent project
+    target_compile_features(core PUBLIC cxx_std_17)
+
+    # Sensible warnings for library as well
+    target_compile_options(core PRIVATE -Wall -Wextra -Wpedantic)
+else()
+    message(STATUS "No source files found in ${CMAKE_CURRENT_SOURCE_DIR}/pub for target 'core'; creating INTERFACE target for headers only.")
+    add_library(core INTERFACE)
+    # expose public headers so other targets can include them
+    target_include_directories(core INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/pub)
+endif()
