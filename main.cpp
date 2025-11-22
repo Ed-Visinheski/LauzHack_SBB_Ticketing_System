@@ -1,10 +1,14 @@
+#include <QApplication>
 #include "style.h"
 #include "pgpGenerator.h"
+#include "window.h"
 
-int main()
+int main(int argc, char** argv)
 {
-    Style style;
-    PgpGenerator pgpGenerator;
-    
-    return 0;
+    QApplication app(argc, argv);
+
+    Window w;
+    w.show();
+
+    return app.exec();
 }

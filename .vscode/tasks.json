@@ -45,7 +45,7 @@
             "command": "bash",
             "args": [
                 "-lc",
-                "mkdir -p build && cd build && cmake .. && cmake --build . --parallel"
+                "mkdir -p build && cd build && cmake -DCMAKE_BUILD_TYPE=Debug .. && cmake --build . --parallel"
             ],
             "presentation": {
                 "echo": true,
