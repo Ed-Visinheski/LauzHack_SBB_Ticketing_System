@@ -1,0 +1,38 @@
+{
+    "configurations": [
+        {
+            "name": "Mac",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/opt/homebrew/opt/rnp/include",
+                "/opt/homebrew/opt/qt/include",
+                "/opt/homebrew/opt/qt/lib/QtCore.framework/Headers",
+                "/opt/homebrew/opt/qt/lib/QtGui.framework/Headers",
+                "/opt/homebrew/opt/qt/lib/QtWidgets.framework/Headers"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/clang",
+            "cStandard": "c17",
+            "intelliSenseMode": "macos-clang-arm64",
+            "compileCommands": "${workspaceFolder}/build/compile_commands.json"
+        },
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/usr/include",
+                "/usr/include/rnp",
+                "/usr/include/qt6",
+                "/usr/include/x86_64-linux-gnu/qt6",   // common on Ubuntu
+                "/usr/include/qt5",
+                "/usr/include/x86_64-linux-gnu/qt5"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/clang",
+            "cStandard": "c17",
+            "intelliSenseMode": "linux-clang-x64",
+            "compileCommands": "${workspaceFolder}/build/compile_commands.json"
+        }
+    ],
+    "version": 4
+}

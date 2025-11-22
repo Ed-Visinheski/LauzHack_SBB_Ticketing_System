@@ -41,7 +41,6 @@ install_ubuntu() {
     # This follows the recommended installation method from apt.llvm.org.
     info "Installing llvm via official apt.llvm.org script..."
     # Ensure wget is available for the install script (script uses wget in its recommended usage)
-    $SUDO apt-get update
     $SUDO apt-get install -y --no-install-recommends wget
 
     # Run the official installer script. Run as root when necessary via sudo.
@@ -57,6 +56,11 @@ install_ubuntu() {
     else
         info "Qt packages installed (apt)."
     fi
+
+    # RNP and its dependencies for building/linking.
+    # Note: some distros ship botan-3 instead of botan-2; adjust the package name if needed.
+    $SUDO apt-get install -y --no-install-recommends \
+        librnp-dev libbotan-2-dev libjson-c-dev libbz2-dev zlib1g-dev pkg-config
 
     # Verify whether qmake or qtpaths are available; if not, give the user clear next steps.
     if command -v qmake >/dev/null 2>&1; then
@@ -117,6 +121,9 @@ install_macos() {
         echo "   Example: export PATH=\"$qt_prefix/bin:\$PATH\""
     fi
 
+    brew install rnp
+    brew install pkg-config
+    
     info "macOS install finished. Verify with: clang --version && qmake --version || qtpaths --version"
 }
 
