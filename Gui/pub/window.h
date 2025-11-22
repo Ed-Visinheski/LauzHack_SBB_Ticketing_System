@@ -2,6 +2,7 @@
 #include "definitions.h"
 #include <QWidget>
 #include "navBar.h"
+#include "topBar.h"
 
 class Window : public QWidget
 {
