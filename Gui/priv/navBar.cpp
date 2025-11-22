@@ -13,9 +13,9 @@ NavBar::NavBar(QWidget* parent)
     setStyleSheet("background-color: #f0f0f0;");
 
     // Buttons A, B, C
-    auto homeButton = new QPushButton(QIcon(QString("icons/magnifying-glass_24px.png")), QString{}, this);
-    auto ticketButton = new QPushButton(QIcon("icons/ticket_24px.png"), QString{}, this);
-    auto idButton = new QPushButton(QIcon("icons/user_24px.png"), QString{}, this);
+    auto homeButton = new QPushButton(QIcon(QString("Icons/magnifying-glass_24px.png")), QString{}, this);
+    auto ticketButton = new QPushButton(QIcon("Icons/ticket_24px.png"), QString{}, this);
+    auto idButton = new QPushButton(QIcon("Icons/user_24px.png"), QString{}, this);
 
     // Optional: set uniform size for buttons
     homeButton->setFixedSize(80, 40);
