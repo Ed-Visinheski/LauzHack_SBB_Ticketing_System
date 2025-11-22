@@ -37,44 +37,15 @@ install_ubuntu() {
     $SUDO apt-get install -y --no-install-recommends \
         ca-certificates curl gnupg lsb-release software-properties-common
 
-    # Detect latest LLVM major version via GitHub releases (best-effort)
-    info "Detecting latest LLVM release..."
-    latest_tag="$(curl -fsSL "https://api.github.com/repos/llvm/llvm-project/releases/latest" 2>/dev/null | grep -Eo '"tag_name":\s*"[^"]+"' | sed -E 's/.*"([^"]+)".*/\1/' || true)"
-    if [ -z "$latest_tag" ]; then
-        info "Could not detect latest LLVM release from GitHub, falling back to 'clang' package."
-        LLVM_MAJOR=""
-    else
-        # examples of tag: llvmorg-17.0.0 or 17.0.0 ; extract first number group as major
-        major="$(echo "$latest_tag" | grep -oE '[0-9]+' | head -n1 || true)"
-        if [ -n "$major" ]; then
-            LLVM_MAJOR="$major"
-            info "Detected LLVM major version: $LLVM_MAJOR (from tag $latest_tag)"
-        else
-            LLVM_MAJOR=""
-        fi
-    fi
+    # Use the official apt.llvm.org install script to set up LLVM packages.
+    # This follows the recommended installation method from apt.llvm.org.
+    info "Installing llvm via official apt.llvm.org script..."
+    # Ensure wget is available for the install script (script uses wget in its recommended usage)
+    $SUDO apt-get update
+    $SUDO apt-get install -y --no-install-recommends wget
 
-    if [ -n "$LLVM_MAJOR" ]; then
-        info "Adding LLVM apt repository for clang-$LLVM_MAJOR..."
-        # Add apt key and repo (apt-key used for simplicity; modern systems may warn)
-        curl -fsSL https://apt.llvm.org/llvm-snapshot.gpg.key | $SUDO apt-key add -
-        distro="$(lsb_release -sc)"
-        echo "deb http://apt.llvm.org/${distro}/ llvm-toolchain-${LLVM_MAJOR} main" | $SUDO tee /etc/apt/sources.list.d/llvm.list >/dev/null
-        $SUDO apt-get update
-        info "Installing clang-$LLVM_MAJOR and related tools..."
-        $SUDO apt-get install -y --no-install-recommends clang-"${LLVM_MAJOR}" lldb-"${LLVM_MAJOR}" clang-format-"${LLVM_MAJOR}"
-        # Prefer clang-$LLVM_MAJOR as default via update-alternatives
-        if [ -x "/usr/bin/clang-${LLVM_MAJOR}" ]; then
-            $SUDO update-alternatives --install /usr/bin/clang clang /usr/bin/clang-"${LLVM_MAJOR}" 100
-        fi
-        if [ -x "/usr/bin/clang++-${LLVM_MAJOR}" ]; then
-            $SUDO update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-"${LLVM_MAJOR}" 100
-        fi
-    else
-        info "Installing distro 'clang' package (may not be the very latest)..."
-        $SUDO apt-get update
-        $SUDO apt-get install -y --no-install-recommends clang
-    fi
+    # Run the official installer script. Run as root when necessary via sudo.
+    $SUDO bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
 
     info "Installing Qt 6 packages (apt)..."
     # Qt6 package names vary by Ubuntu version; install common Qt6 dev packages
