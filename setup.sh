@@ -37,53 +37,42 @@ install_ubuntu() {
     $SUDO apt-get install -y --no-install-recommends \
         ca-certificates curl gnupg lsb-release software-properties-common
 
-    # Detect latest LLVM major version via GitHub releases (best-effort)
-    info "Detecting latest LLVM release..."
-    latest_tag="$(curl -fsSL "https://api.github.com/repos/llvm/llvm-project/releases/latest" 2>/dev/null | grep -Eo '"tag_name":\s*"[^"]+"' | sed -E 's/.*"([^"]+)".*/\1/' || true)"
-    if [ -z "$latest_tag" ]; then
-        info "Could not detect latest LLVM release from GitHub, falling back to 'clang' package."
-        LLVM_MAJOR=""
-    else
-        # examples of tag: llvmorg-17.0.0 or 17.0.0 ; extract first number group as major
-        major="$(echo "$latest_tag" | grep -oE '[0-9]+' | head -n1 || true)"
-        if [ -n "$major" ]; then
-            LLVM_MAJOR="$major"
-            info "Detected LLVM major version: $LLVM_MAJOR (from tag $latest_tag)"
-        else
-            LLVM_MAJOR=""
-        fi
-    fi
+    # Use the official apt.llvm.org install script to set up LLVM packages.
+    # This follows the recommended installation method from apt.llvm.org.
+    info "Installing llvm via official apt.llvm.org script..."
+    # Ensure wget is available for the install script (script uses wget in its recommended usage)
+    $SUDO apt-get update
+    $SUDO apt-get install -y --no-install-recommends wget
 
-    if [ -n "$LLVM_MAJOR" ]; then
-        info "Adding LLVM apt repository for clang-$LLVM_MAJOR..."
-        # Add apt key and repo (apt-key used for simplicity; modern systems may warn)
-        curl -fsSL https://apt.llvm.org/llvm-snapshot.gpg.key | $SUDO apt-key add -
-        distro="$(lsb_release -sc)"
-        echo "deb http://apt.llvm.org/${distro}/ llvm-toolchain-${LLVM_MAJOR} main" | $SUDO tee /etc/apt/sources.list.d/llvm.list >/dev/null
-        $SUDO apt-get update
-        info "Installing clang-$LLVM_MAJOR and related tools..."
-        $SUDO apt-get install -y --no-install-recommends clang-"${LLVM_MAJOR}" lldb-"${LLVM_MAJOR}" clang-format-"${LLVM_MAJOR}"
-        # Prefer clang-$LLVM_MAJOR as default via update-alternatives
-        if [ -x "/usr/bin/clang-${LLVM_MAJOR}" ]; then
-            $SUDO update-alternatives --install /usr/bin/clang clang /usr/bin/clang-"${LLVM_MAJOR}" 100
-        fi
-        if [ -x "/usr/bin/clang++-${LLVM_MAJOR}" ]; then
-            $SUDO update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-"${LLVM_MAJOR}" 100
-        fi
-    else
-        info "Installing distro 'clang' package (may not be the very latest)..."
-        $SUDO apt-get update
-        $SUDO apt-get install -y --no-install-recommends clang
-    fi
+    # Run the official installer script. Run as root when necessary via sudo.
+    $SUDO bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
 
     info "Installing Qt 6 packages (apt)..."
-    # Qt6 package names vary by Ubuntu version; install common Qt6 dev packages
-    $SUDO apt-get install -y --no-install-recommends \
-        qt6-base-dev qt6-base-dev-tools qt6-tools-dev qt6-tools-dev-tools qt6-qmake || {
-            info "Some qt6 packages failed to install via apt. You may need to add a PPA or install Qt via the official installer."
-        }
+    # Qt6 package names vary by Ubuntu version; attempt to install common Qt6 dev packages.
+    # Install including recommended packages because qmake/qttools can be pulled in as recommends.
+    if ! $SUDO apt-get install -y \
+        qt6-base-dev qt6-base-dev-tools qt6-tools-dev qt6-tools-dev-tools qt6-qmake; then
+        info "Some qt6 packages failed to install via apt. They may not be available on this Ubuntu release."
+        info "Possible options: add a Qt PPA, use the official Qt online installer, or install a packaged Qt provided by your distro."
+    else
+        info "Qt packages installed (apt)."
+    fi
 
-    info "Ubuntu install finished. Verify with: clang --version && qmake --version || qtpaths --version"
+    # Verify whether qmake or qtpaths are available; if not, give the user clear next steps.
+    if command -v qmake >/dev/null 2>&1; then
+        info "Found qmake: $(command -v qmake)"
+    elif command -v qtpaths >/dev/null 2>&1; then
+        info "Found qtpaths: $(command -v qtpaths)"
+    else
+        info "qmake and qtpaths not found. Qt may not be installed or may be installed in a non-standard location."
+        echo "Suggested next steps:"
+        echo " - Try installing a Qt PPA (example):"
+        echo "     sudo add-apt-repository ppa:beineri/opt-qt-6 && sudo apt-get update && sudo apt-get install qt6-base-dev qt6-qmake"
+        echo " - Or use the official Qt online installer (interactive): https://www.qt.io/download"
+        echo " - If you installed Qt manually, add its bin folder to PATH, e.g.: export PATH=\"/opt/qt/<version>/bin:\$PATH\""
+    fi
+
+    info "Ubuntu install finished. Verify with: clang --version && qmake6 --version || qtpaths6 --version"
 }
 
 install_macos() {
