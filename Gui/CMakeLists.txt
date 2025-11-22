@@ -2,24 +2,28 @@ cmake_minimum_required(VERSION 3.15)
 
 # Create a static library target for Gui using sources from pub/*.cpp
 file(GLOB_RECURSE GUI_PUB_SOURCES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/pub/*.cpp)
+file(GLOB_RECURSE GUI_PRIV_SOURCES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/priv/*.cpp)
 
-if(NOT GUI_PUB_SOURCES)
-    message(WARNING "No source files found in ${CMAKE_CURRENT_SOURCE_DIR}/pub for target 'gui'. If this is expected, ignore this warning.")
-endif() 
+if(GUI_PUB_SOURCES OR GUI_PRIV_SOURCES)
+    add_library(gui STATIC ${GUI_PUB_SOURCES} ${GUI_PRIV_SOURCES})
 
-add_library(gui STATIC ${GUI_PUB_SOURCES})
+    # Public headers (API) live in 'pub', private headers in 'priv'
+    target_include_directories(gui
+        PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/pub
+        PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/priv
+    )
 
-# Public headers (API) live in 'pub', private headers in 'priv'
-target_include_directories(gui
-    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/pub
-    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/priv
-)
+    # If Gui depends on Core, link it here (adjust if not needed)
+    target_link_libraries(gui PUBLIC core)
 
-# If Gui depends on Core, link it here (adjust if not needed)
-target_link_libraries(gui PUBLIC core)
+    # Inherit C++ standard from parent project
+    target_compile_features(gui PUBLIC cxx_std_17)
 
-# Inherit C++ standard from parent project
-target_compile_features(gui PUBLIC cxx_std_17)
-
-# Sensible warnings for library as well
-target_compile_options(gui PRIVATE -Wall -Wextra -Wpedantic)
+    # Sensible warnings for library as well
+    target_compile_options(gui PRIVATE -Wall -Wextra -Wpedantic)
+else()
+    message(STATUS "No source files found in ${CMAKE_CURRENT_SOURCE_DIR}/pub for target 'gui'; creating INTERFACE target for headers only.")
+    add_library(gui INTERFACE)
+    # expose public headers so other targets can include them
+    target_include_directories(gui INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/pub)
+endif()

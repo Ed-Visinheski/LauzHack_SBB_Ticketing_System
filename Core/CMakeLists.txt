@@ -2,9 +2,10 @@ cmake_minimum_required(VERSION 3.15)
 
 # Create a static library target for Core using sources from pub/*.cpp
 file(GLOB_RECURSE CORE_PUB_SOURCES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/pub/*.cpp)
+file(GLOB_RECURSE CORE_PRIV_SOURCES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/priv/*.cpp)
 
-if(CORE_PUB_SOURCES)
-    add_library(core STATIC ${CORE_PUB_SOURCES})
+if(CORE_PUB_SOURCES OR CORE_PRIV_SOURCES)
+    add_library(core STATIC ${CORE_PUB_SOURCES} ${CORE_PRIV_SOURCES})
 
     # Public headers (API) live in 'pub', private headers in 'priv' 
     target_include_directories(core
