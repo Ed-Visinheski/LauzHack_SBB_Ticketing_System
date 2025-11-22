@@ -4,6 +4,8 @@ project(LauzHack_SBB_Ticketing_System VERSION 0.1 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+# Let IDEs/tools (e.g. VS Code IntelliSense) pick up compiler flags from compile_commands.json
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Enable Qt automatic features (moc/uic/rcc) if Qt is available
 set(CMAKE_AUTOMOC ON)
@@ -88,7 +90,7 @@ or the appropriate rnp-dev package on Linux).")
         HINTS ${RNP_HINTS}
     )
     find_library(RNP_BOTAN_LIBRARY
-        NAMES botan-3 libbotan-3 botan
+        NAMES botan-3 libbotan-3 botan-2 libbotan-2 botan
         PATH_SUFFIXES lib
         HINTS ${RNP_HINTS} /opt/homebrew/opt/botan@3 /opt/homebrew/opt/botan
     )
