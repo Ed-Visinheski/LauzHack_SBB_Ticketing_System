@@ -72,7 +72,7 @@ install_ubuntu() {
         echo " - If you installed Qt manually, add its bin folder to PATH, e.g.: export PATH=\"/opt/qt/<version>/bin:\$PATH\""
     fi
 
-    info "Ubuntu install finished. Verify with: clang --version && qmake --version || qtpaths --version"
+    info "Ubuntu install finished. Verify with: clang --version && qmake6 --version || qtpaths6 --version"
 }
 
 install_macos() {
