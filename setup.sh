@@ -48,11 +48,29 @@ install_ubuntu() {
     $SUDO bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
 
     info "Installing Qt 6 packages (apt)..."
-    # Qt6 package names vary by Ubuntu version; install common Qt6 dev packages
-    $SUDO apt-get install -y --no-install-recommends \
-        qt6-base-dev qt6-base-dev-tools qt6-tools-dev qt6-tools-dev-tools qt6-qmake || {
-            info "Some qt6 packages failed to install via apt. You may need to add a PPA or install Qt via the official installer."
-        }
+    # Qt6 package names vary by Ubuntu version; attempt to install common Qt6 dev packages.
+    # Install including recommended packages because qmake/qttools can be pulled in as recommends.
+    if ! $SUDO apt-get install -y \
+        qt6-base-dev qt6-base-dev-tools qt6-tools-dev qt6-tools-dev-tools qt6-qmake; then
+        info "Some qt6 packages failed to install via apt. They may not be available on this Ubuntu release."
+        info "Possible options: add a Qt PPA, use the official Qt online installer, or install a packaged Qt provided by your distro."
+    else
+        info "Qt packages installed (apt)."
+    fi
+
+    # Verify whether qmake or qtpaths are available; if not, give the user clear next steps.
+    if command -v qmake >/dev/null 2>&1; then
+        info "Found qmake: $(command -v qmake)"
+    elif command -v qtpaths >/dev/null 2>&1; then
+        info "Found qtpaths: $(command -v qtpaths)"
+    else
+        info "qmake and qtpaths not found. Qt may not be installed or may be installed in a non-standard location."
+        echo "Suggested next steps:"
+        echo " - Try installing a Qt PPA (example):"
+        echo "     sudo add-apt-repository ppa:beineri/opt-qt-6 && sudo apt-get update && sudo apt-get install qt6-base-dev qt6-qmake"
+        echo " - Or use the official Qt online installer (interactive): https://www.qt.io/download"
+        echo " - If you installed Qt manually, add its bin folder to PATH, e.g.: export PATH=\"/opt/qt/<version>/bin:\$PATH\""
+    fi
 
     info "Ubuntu install finished. Verify with: clang --version && qmake --version || qtpaths --version"
 }
