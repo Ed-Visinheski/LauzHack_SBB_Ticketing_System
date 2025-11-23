@@ -21,8 +21,44 @@ Window::Window(QWidget* parent)
     homePage_ = new QWidget(this);
     homePage_->setStyleSheet("background-color: #e8f5e9;"); // light green
 
+    // Add LocationSelection to home page
+    auto homeLayout = new QVBoxLayout(homePage_);
+    homeLayout->setContentsMargins(20, 20, 20, 20);
+    locationSelection_ = new LocationSelection(homePage_);
+    locationSelection_->setMaximumWidth(400);
+    homeLayout->addWidget(locationSelection_, 0, Qt::AlignCenter | Qt::AlignTop);
+    homeLayout->addStretch();
+    homePage_->setLayout(homeLayout);
+
+    // Connect search signal: store booking, clear inputs, switch to ticket page
+    connect(locationSelection_, &LocationSelection::searchClicked, this,
+        [this](const QString& dep, const QString& dest, const QDate& date, const QTime& time) {
+            // Store booking information
+            ticketInfo_ = TicketInfo(dep, dest, date, time);
+            qDebug() << "Booking created:" << ticketInfo_.bookingReference() 
+                     << dep << "->" << dest << "on" << date << "at" << time;
+            
+            // Update the booking reference display
+            bookingReference_->updateTicket(ticketInfo_);
+            
+            // Clear the form
+            locationSelection_->clear();
+            
+            // Switch to ticket page
+            stacked_->setCurrentIndex(1);
+        });
+
     ticketPage_ = new QWidget(this);
     ticketPage_->setStyleSheet("background-color: #e3f2fd;"); // light blue
+
+    // Add BookingReference to ticket page
+    auto ticketLayout = new QVBoxLayout(ticketPage_);
+    ticketLayout->setContentsMargins(20, 20, 20, 20);
+    bookingReference_ = new BookingReference(ticketPage_);
+    bookingReference_->setMaximumWidth(400);
+    ticketLayout->addWidget(bookingReference_, 0, Qt::AlignCenter | Qt::AlignTop);
+    ticketLayout->addStretch();
+    ticketPage_->setLayout(ticketLayout);
 
     idPage_ = new QWidget(this);
     idPage_->setStyleSheet("background-color: #fff3e0;"); // light orange
