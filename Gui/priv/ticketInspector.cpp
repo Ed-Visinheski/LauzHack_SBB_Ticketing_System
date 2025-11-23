@@ -18,176 +18,208 @@ TicketInspector::TicketInspector(QWidget* parent)
 
 void TicketInspector::setupUI()
 {
+    setStyleSheet("background-color: #f5f5f5;");
+    
     auto mainLayout = new QVBoxLayout(this);
-    mainLayout->setContentsMargins(20, 20, 20, 20);
-    mainLayout->setSpacing(20);
+    mainLayout->setContentsMargins(0, 0, 0, 0);
+    mainLayout->setSpacing(0);
 
-    // Title
-    titleLabel_ = new QLabel("Ticket Inspector", this);
-    titleLabel_->setStyleSheet("font-size: 28px; font-weight: bold; color: #2c3e50;");
-    titleLabel_->setAlignment(Qt::AlignCenter);
-    mainLayout->addWidget(titleLabel_);
+    // Add SBB header with logo
+    auto headerWidget = new QWidget(this);
+    headerWidget->setStyleSheet("background-color: #eb0000;");
+    headerWidget->setFixedHeight(80);
+    auto headerLayout = new QHBoxLayout(headerWidget);
+    headerLayout->setContentsMargins(20, 15, 20, 15);
+    
+    auto logoLabel = new QLabel(headerWidget);
+    logoLabel->setAlignment(Qt::AlignCenter);
+    logoLabel->setFixedSize(50, 50);
+    logoLabel->setStyleSheet("background: transparent; border: none; padding: 0;");
+    QPixmap logoPix("icons/SBB_logo.svg");
+    if (!logoPix.isNull()) {
+        logoLabel->setPixmap(logoPix.scaled(logoLabel->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    }
+    headerLayout->addWidget(logoLabel);
+    
+    titleLabel_ = new QLabel("Ticket Inspector", headerWidget);
+    titleLabel_->setStyleSheet("font-size: 18px; font-weight: 600; color: white; background: transparent; border: none;");
+    titleLabel_->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+    headerLayout->addWidget(titleLabel_);
+    headerLayout->addStretch();
+    
+    mainLayout->addWidget(headerWidget);
 
-    mainLayout->addSpacing(10);
+    // Content wrapper with scroll area
+    auto scrollArea = new QScrollArea(this);
+    scrollArea->setWidgetResizable(true);
+    scrollArea->setStyleSheet("QScrollArea { border: none; background-color: #f5f5f5; }");
+    
+    auto contentWrapper = new QWidget();
+    contentWrapper->setStyleSheet("background-color: #f5f5f5;");
+    auto contentMainLayout = new QVBoxLayout(contentWrapper);
+    contentMainLayout->setContentsMargins(30, 30, 30, 30);
+    contentMainLayout->setSpacing(25);
 
     // Content area with two columns
     auto contentLayout = new QHBoxLayout();
     contentLayout->setSpacing(20);
 
     // Left Column - PIT
-    auto pitPanel = new QFrame(this);
-    pitPanel->setFrameShape(QFrame::StyledPanel);
-    pitPanel->setStyleSheet("QFrame { background-color: #ecf0f1; border-radius: 8px; padding: 15px; }");
+    auto pitPanel = new QFrame(contentWrapper);
+    pitPanel->setFrameShape(QFrame::NoFrame);
+    pitPanel->setStyleSheet("QFrame { background-color: white; border: 1px solid #e0e0e0; border-radius: 12px; }");
     auto pitLayout = new QVBoxLayout(pitPanel);
+    pitLayout->setContentsMargins(20, 20, 20, 20);
+    pitLayout->setSpacing(15);
     
     pitLabel_ = new QLabel("Personal Identity Token (PIT)", pitPanel);
-    pitLabel_->setStyleSheet("font-size: 16px; font-weight: bold; color: #34495e;");
+    pitLabel_->setStyleSheet("font-size: 16px; font-weight: 600; color: #333; background: transparent; border: none;");
     pitLabel_->setAlignment(Qt::AlignCenter);
     pitLayout->addWidget(pitLabel_);
-    
-    pitLayout->addSpacing(10);
     
     // PIT Image preview
     pitImageLabel_ = new QLabel(pitPanel);
     pitImageLabel_->setFixedSize(IMAGE_SIZE, IMAGE_SIZE);
     pitImageLabel_->setAlignment(Qt::AlignCenter);
-    pitImageLabel_->setStyleSheet("QLabel { background-color: white; border: 2px dashed #95a5a6; border-radius: 8px; }");
+    pitImageLabel_->setStyleSheet("QLabel { background-color: #fafafa; border: 2px dashed #e0e0e0; border-radius: 8px; color: #666; }");
     pitImageLabel_->setText("No QR Code Loaded");
     pitImageLabel_->setWordWrap(true);
+    pitImageLabel_->setScaledContents(false);
     pitLayout->addWidget(pitImageLabel_, 0, Qt::AlignCenter);
     
-    pitLayout->addSpacing(10);
-    
     loadPITButton_ = new QPushButton("Load PIT QR Code", pitPanel);
+    loadPITButton_->setMinimumHeight(46);
+    loadPITButton_->setCursor(Qt::PointingHandCursor);
     loadPITButton_->setStyleSheet(
         "QPushButton { "
-        "  background-color: #3498db; color: white; font-weight: bold; "
-        "  font-size: 14px; padding: 10px 20px; border: none; border-radius: 6px; "
+        "  background-color: #eb0000; color: white; font-weight: 600; "
+        "  font-size: 14px; border: none; border-radius: 8px; "
         "} "
-        "QPushButton:hover { background-color: #2980b9; } "
-        "QPushButton:pressed { background-color: #21618c; }"
+        "QPushButton:hover { background-color: #c00000; } "
+        "QPushButton:pressed { background-color: #a00000; }"
     );
     connect(loadPITButton_, &QPushButton::clicked, this, &TicketInspector::loadPITQRCode);
     pitLayout->addWidget(loadPITButton_);
     
-    pitLayout->addSpacing(5);
-    
     pitStatusLabel_ = new QLabel("Status: Waiting", pitPanel);
-    pitStatusLabel_->setStyleSheet("font-size: 12px; color: #7f8c8d;");
+    pitStatusLabel_->setStyleSheet("font-size: 13px; color: #666; background: transparent; border: none;");
     pitStatusLabel_->setAlignment(Qt::AlignCenter);
     pitLayout->addWidget(pitStatusLabel_);
     
-    pitLayout->addStretch();
-    contentLayout->addWidget(pitPanel);
+    contentLayout->addWidget(pitPanel, 1);
 
     // Right Column - Ticket
-    auto ticketPanel = new QFrame(this);
-    ticketPanel->setFrameShape(QFrame::StyledPanel);
-    ticketPanel->setStyleSheet("QFrame { background-color: #ecf0f1; border-radius: 8px; padding: 15px; }");
+    auto ticketPanel = new QFrame(contentWrapper);
+    ticketPanel->setFrameShape(QFrame::NoFrame);
+    ticketPanel->setStyleSheet("QFrame { background-color: white; border: 1px solid #e0e0e0; border-radius: 12px; }");
     auto ticketLayout = new QVBoxLayout(ticketPanel);
+    ticketLayout->setContentsMargins(20, 20, 20, 20);
+    ticketLayout->setSpacing(15);
     
     ticketLabel_ = new QLabel("Booking Ticket", ticketPanel);
-    ticketLabel_->setStyleSheet("font-size: 16px; font-weight: bold; color: #34495e;");
+    ticketLabel_->setStyleSheet("font-size: 16px; font-weight: 600; color: #333; background: transparent; border: none;");
     ticketLabel_->setAlignment(Qt::AlignCenter);
     ticketLayout->addWidget(ticketLabel_);
-    
-    ticketLayout->addSpacing(10);
     
     // Ticket Image preview
     ticketImageLabel_ = new QLabel(ticketPanel);
     ticketImageLabel_->setFixedSize(IMAGE_SIZE, IMAGE_SIZE);
     ticketImageLabel_->setAlignment(Qt::AlignCenter);
-    ticketImageLabel_->setStyleSheet("QLabel { background-color: white; border: 2px dashed #95a5a6; border-radius: 8px; }");
+    ticketImageLabel_->setStyleSheet("QLabel { background-color: #fafafa; border: 2px dashed #e0e0e0; border-radius: 8px; color: #666; }");
     ticketImageLabel_->setText("No QR Code Loaded");
     ticketImageLabel_->setWordWrap(true);
+    ticketImageLabel_->setScaledContents(false);
     ticketLayout->addWidget(ticketImageLabel_, 0, Qt::AlignCenter);
     
-    ticketLayout->addSpacing(10);
-    
     loadTicketButton_ = new QPushButton("Load Ticket QR Code", ticketPanel);
+    loadTicketButton_->setMinimumHeight(46);
+    loadTicketButton_->setCursor(Qt::PointingHandCursor);
     loadTicketButton_->setStyleSheet(
         "QPushButton { "
-        "  background-color: #3498db; color: white; font-weight: bold; "
-        "  font-size: 14px; padding: 10px 20px; border: none; border-radius: 6px; "
+        "  background-color: #eb0000; color: white; font-weight: 600; "
+        "  font-size: 14px; border: none; border-radius: 8px; "
         "} "
-        "QPushButton:hover { background-color: #2980b9; } "
-        "QPushButton:pressed { background-color: #21618c; }"
+        "QPushButton:hover { background-color: #c00000; } "
+        "QPushButton:pressed { background-color: #a00000; }"
     );
     connect(loadTicketButton_, &QPushButton::clicked, this, &TicketInspector::loadTicketQRCode);
     ticketLayout->addWidget(loadTicketButton_);
     
-    ticketLayout->addSpacing(5);
-    
     ticketStatusLabel_ = new QLabel("Status: Waiting", ticketPanel);
-    ticketStatusLabel_->setStyleSheet("font-size: 12px; color: #7f8c8d;");
+    ticketStatusLabel_->setStyleSheet("font-size: 13px; color: #666; background: transparent; border: none;");
     ticketStatusLabel_->setAlignment(Qt::AlignCenter);
     ticketLayout->addWidget(ticketStatusLabel_);
     
-    ticketLayout->addStretch();
-    contentLayout->addWidget(ticketPanel);
+    contentLayout->addWidget(ticketPanel, 1);
 
-    mainLayout->addLayout(contentLayout);
+    contentMainLayout->addLayout(contentLayout);
 
     // Action Buttons
     auto buttonLayout = new QHBoxLayout();
     buttonLayout->setSpacing(15);
     
-    clearButton_ = new QPushButton("Clear All", this);
-    clearButton_->setFixedHeight(45);
+    clearButton_ = new QPushButton("Clear All", contentWrapper);
+    clearButton_->setMinimumHeight(50);
+    clearButton_->setCursor(Qt::PointingHandCursor);
     clearButton_->setStyleSheet(
         "QPushButton { "
-        "  background-color: #95a5a6; color: white; font-weight: bold; "
-        "  font-size: 15px; padding: 10px 30px; border: none; border-radius: 6px; "
+        "  background-color: white; color: #666; font-weight: 600; "
+        "  font-size: 14px; border: 2px solid #e0e0e0; border-radius: 8px; "
         "} "
-        "QPushButton:hover { background-color: #7f8c8d; }"
+        "QPushButton:hover { background-color: #f5f5f5; border-color: #ccc; }"
     );
     connect(clearButton_, &QPushButton::clicked, this, &TicketInspector::clearAll);
     buttonLayout->addWidget(clearButton_);
     
-    verifyButton_ = new QPushButton("Verify Ownership", this);
-    verifyButton_->setFixedHeight(45);
+    verifyButton_ = new QPushButton("Verify Ownership", contentWrapper);
+    verifyButton_->setMinimumHeight(50);
+    verifyButton_->setCursor(Qt::PointingHandCursor);
     verifyButton_->setStyleSheet(
         "QPushButton { "
-        "  background-color: #27ae60; color: white; font-weight: bold; "
-        "  font-size: 16px; padding: 10px 40px; border: none; border-radius: 6px; "
+        "  background-color: #eb0000; color: white; font-weight: 600; "
+        "  font-size: 15px; border: none; border-radius: 8px; "
         "} "
-        "QPushButton:hover { background-color: #229954; } "
-        "QPushButton:pressed { background-color: #1e8449; } "
-        "QPushButton:disabled { background-color: #bdc3c7; }"
+        "QPushButton:hover { background-color: #c00000; } "
+        "QPushButton:pressed { background-color: #a00000; } "
+        "QPushButton:disabled { background-color: #e0e0e0; color: #999; }"
     );
     verifyButton_->setEnabled(false);
     connect(verifyButton_, &QPushButton::clicked, this, &TicketInspector::verifyOwnership);
     buttonLayout->addWidget(verifyButton_, 1);
     
-    mainLayout->addLayout(buttonLayout);
+    contentMainLayout->addLayout(buttonLayout);
 
     // Result Panel
-    resultPanel_ = new QWidget(this);
-    resultPanel_->setStyleSheet("QWidget { background-color: #f8f9fa; border-radius: 8px; padding: 20px; }");
+    resultPanel_ = new QWidget(contentWrapper);
+    resultPanel_->setStyleSheet("QWidget { background-color: white; border: 1px solid #e0e0e0; border-radius: 12px; }");
     auto resultLayout = new QVBoxLayout(resultPanel_);
+    resultLayout->setContentsMargins(24, 24, 24, 24);
+    resultLayout->setSpacing(10);
     
     auto resultTopLayout = new QHBoxLayout();
     resultIconLabel_ = new QLabel(resultPanel_);
     resultIconLabel_->setFixedSize(48, 48);
     resultIconLabel_->setAlignment(Qt::AlignCenter);
+    resultIconLabel_->setStyleSheet("background: transparent; border: none;");
     resultTopLayout->addWidget(resultIconLabel_);
     
     resultTextLabel_ = new QLabel("Awaiting verification...", resultPanel_);
-    resultTextLabel_->setStyleSheet("font-size: 18px; font-weight: bold; color: #7f8c8d;");
+    resultTextLabel_->setStyleSheet("font-size: 18px; font-weight: 600; color: #666; background: transparent; border: none;");
     resultTextLabel_->setWordWrap(true);
     resultTopLayout->addWidget(resultTextLabel_, 1);
     
     resultLayout->addLayout(resultTopLayout);
     
     detailsLabel_ = new QLabel("Load both QR codes and click 'Verify Ownership' to check if the ticket belongs to the user.", resultPanel_);
-    detailsLabel_->setStyleSheet("font-size: 13px; color: #7f8c8d; margin-top: 10px;");
+    detailsLabel_->setStyleSheet("font-size: 13px; color: #666; background: transparent; border: none;");
     detailsLabel_->setWordWrap(true);
     resultLayout->addWidget(detailsLabel_);
     
     resultPanel_->setVisible(true);
-    mainLayout->addWidget(resultPanel_);
+    contentMainLayout->addWidget(resultPanel_);
     
-    setLayout(mainLayout);
+    scrollArea->setWidget(contentWrapper);
+    mainLayout->addWidget(scrollArea);
 }
 
 void TicketInspector::loadPITQRCode()
@@ -215,11 +247,11 @@ void TicketInspector::loadPITQRCode()
     
     if (pitQRData_.isEmpty()) {
         pitStatusLabel_->setText("Status: Failed to decode QR");
-        pitStatusLabel_->setStyleSheet("font-size: 12px; color: #e74c3c;");
+        pitStatusLabel_->setStyleSheet("font-size: 13px; color: #eb0000; font-weight: 600;");
         QMessageBox::warning(this, "Error", "Failed to decode QR code from image.\n\nMake sure the image contains a valid QR code.");
     } else {
         pitStatusLabel_->setText("Status: QR Code Loaded ✓");
-        pitStatusLabel_->setStyleSheet("font-size: 12px; color: #27ae60; font-weight: bold;");
+        pitStatusLabel_->setStyleSheet("font-size: 13px; color: #27ae60; font-weight: 600;");
     }
     
     // Enable verify button if both QR codes are loaded
@@ -251,11 +283,11 @@ void TicketInspector::loadTicketQRCode()
     
     if (ticketQRData_.isEmpty()) {
         ticketStatusLabel_->setText("Status: Failed to decode QR");
-        ticketStatusLabel_->setStyleSheet("font-size: 12px; color: #e74c3c;");
+        ticketStatusLabel_->setStyleSheet("font-size: 13px; color: #eb0000; font-weight: 600;");
         QMessageBox::warning(this, "Error", "Failed to decode QR code from image.\n\nMake sure the image contains a valid QR code.");
     } else {
         ticketStatusLabel_->setText("Status: QR Code Loaded ✓");
-        ticketStatusLabel_->setStyleSheet("font-size: 12px; color: #27ae60; font-weight: bold;");
+        ticketStatusLabel_->setStyleSheet("font-size: 13px; color: #27ae60; font-weight: 600;");
     }
     
     // Enable verify button if both QR codes are loaded
@@ -289,29 +321,29 @@ void TicketInspector::clearAll()
     ticketImageLabel_->setText("No QR Code Loaded");
     
     pitStatusLabel_->setText("Status: Waiting");
-    pitStatusLabel_->setStyleSheet("font-size: 12px; color: #7f8c8d;");
+    pitStatusLabel_->setStyleSheet("font-size: 13px; color: #666;");
     ticketStatusLabel_->setText("Status: Waiting");
-    ticketStatusLabel_->setStyleSheet("font-size: 12px; color: #7f8c8d;");
+    ticketStatusLabel_->setStyleSheet("font-size: 13px; color: #666;");
     
     verifyButton_->setEnabled(false);
     
     resultIconLabel_->clear();
     resultTextLabel_->setText("Awaiting verification...");
-    resultTextLabel_->setStyleSheet("font-size: 18px; font-weight: bold; color: #7f8c8d;");
+    resultTextLabel_->setStyleSheet("font-size: 18px; font-weight: 600; color: #666;");
     detailsLabel_->setText("Load both QR codes and click 'Verify Ownership' to check if the ticket belongs to the user.");
-    detailsLabel_->setStyleSheet("font-size: 13px; color: #7f8c8d; margin-top: 10px;");
-    resultPanel_->setStyleSheet("QWidget { background-color: #f8f9fa; border-radius: 8px; padding: 20px; }");
+    detailsLabel_->setStyleSheet("font-size: 13px; color: #666; margin-top: 10px;");
+    resultPanel_->setStyleSheet("QWidget { background-color: white; border: 1px solid #e0e0e0; border-radius: 12px; padding: 24px; }");
 }
 
 void TicketInspector::updateVerificationStatus(const TicketOwnership::VerificationResult& result)
 {
     if (result.keysMatch && result.pitParsed && result.ticketParsed) {
         // Success - Keys Match
-        resultPanel_->setStyleSheet("QWidget { background-color: #d5f4e6; border: 2px solid #27ae60; border-radius: 8px; padding: 20px; }");
+        resultPanel_->setStyleSheet("QWidget { background-color: #d5f4e6; border: 2px solid #27ae60; border-radius: 12px; padding: 24px; }");
         resultIconLabel_->setText("✓");
-        resultIconLabel_->setStyleSheet("font-size: 36px; color: #27ae60; font-weight: bold;");
+        resultIconLabel_->setStyleSheet("font-size: 36px; color: #27ae60; font-weight: 600;");
         resultTextLabel_->setText("VALID: Ticket Belongs to User");
-        resultTextLabel_->setStyleSheet("font-size: 18px; font-weight: bold; color: #27ae60;");
+        resultTextLabel_->setStyleSheet("font-size: 18px; font-weight: 600; color: #27ae60;");
         
         QString details = QString("• Booking Reference: %1\n"
                                   "• PIT Parsed: ✓\n"
@@ -321,15 +353,15 @@ void TicketInspector::updateVerificationStatus(const TicketOwnership::Verificati
         details = details.arg(result.bookingReference);
         
         detailsLabel_->setText(details);
-        detailsLabel_->setStyleSheet("font-size: 13px; color: #27ae60; margin-top: 10px; font-weight: bold;");
+        detailsLabel_->setStyleSheet("font-size: 13px; color: #27ae60; margin-top: 10px; font-weight: 600;");
         
     } else {
         // Failure - Keys Don't Match or Parse Error
-        resultPanel_->setStyleSheet("QWidget { background-color: #fadbd8; border: 2px solid #e74c3c; border-radius: 8px; padding: 20px; }");
+        resultPanel_->setStyleSheet("QWidget { background-color: #ffe6e6; border: 2px solid #eb0000; border-radius: 12px; padding: 24px; }");
         resultIconLabel_->setText("✗");
-        resultIconLabel_->setStyleSheet("font-size: 36px; color: #e74c3c; font-weight: bold;");
+        resultIconLabel_->setStyleSheet("font-size: 36px; color: #eb0000; font-weight: 600;");
         resultTextLabel_->setText("INVALID: Ticket Does NOT Belong to User");
-        resultTextLabel_->setStyleSheet("font-size: 18px; font-weight: bold; color: #e74c3c;");
+        resultTextLabel_->setStyleSheet("font-size: 18px; font-weight: 600; color: #eb0000;");
         
         QString details = QString("• Error: %1\n"
                                   "• PIT Parsed: %2\n"
@@ -342,7 +374,7 @@ void TicketInspector::updateVerificationStatus(const TicketOwnership::Verificati
                         .arg(result.keysMatch ? "✓" : "✗");
         
         detailsLabel_->setText(details);
-        detailsLabel_->setStyleSheet("font-size: 13px; color: #e74c3c; margin-top: 10px; font-weight: bold;");
+        detailsLabel_->setStyleSheet("font-size: 13px; color: #eb0000; margin-top: 10px; font-weight: 600;");
     }
 }
 

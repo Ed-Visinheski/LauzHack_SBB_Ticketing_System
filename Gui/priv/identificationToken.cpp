@@ -21,13 +21,18 @@ IdentificationToken::IdentificationToken(QWidget* parent)
     mainLayout->addStretch(1);
 
     // Title
-    titleLabel_ = new QLabel("Personal Identification Token", this);
-    titleLabel_->setStyleSheet("font-size: 22px; font-weight: bold; color: #333;");
-    titleLabel_->setAlignment(Qt::AlignCenter);
-    titleLabel_->setWordWrap(true);
     mainLayout->addWidget(titleLabel_);
 
     mainLayout->addSpacing(10);
+
+    // Timer label
+    timerLabel_ = new QLabel("Refreshes in: 10s", this);
+    timerLabel_->setStyleSheet("font-size: 14px; font-weight: 600; color: #eb0000;");
+    timerLabel_->setAlignment(Qt::AlignCenter);
+    timerLabel_->setVisible(false);
+    mainLayout->addWidget(timerLabel_);
+
+    mainLayout->addSpacing(5);
 
     // QR Code container
     auto qrContainer = new QWidget(this);
@@ -89,18 +94,40 @@ IdentificationToken::IdentificationToken(QWidget* parent)
     mainLayout->addStretch(2);
 
     setLayout(mainLayout);
+    
+    // Setup timers
+    countdownTimer_ = new QTimer(this);
+    connect(countdownTimer_, &QTimer::timeout, this, &IdentificationToken::updateCountdown);
+    
+    refreshTimer_ = new QTimer(this);
+    refreshTimer_->setSingleShot(true);
+    connect(refreshTimer_, &QTimer::timeout, this, &IdentificationToken::refreshQRCode);
 }
 
 void IdentificationToken::setIdentificationToken(const QString& publicKey, const QString& privateKey)
 {
     publicKey_ = publicKey;
+    privateKey_ = privateKey;
     
+    // Generate initial QR code
+    generateQRCodeWithTimestamp();
+    
+    // Show timer label and start countdown
+    timerLabel_->setVisible(true);
+    countdown_ = 10;
+    timerLabel_->setText(QString("Refreshes in: %1s").arg(countdown_));
+    countdownTimer_->start(1000); // Update every second
+    refreshTimer_->start(10000); // Refresh after 10 seconds
+}
+
+void IdentificationToken::generateQRCodeWithTimestamp()
+{
     try {
         // Get current Unix timestamp
         qint64 timestamp = QDateTime::currentSecsSinceEpoch();
         
         // Create data to sign: publicKey + timestamp (anonymous, no email)
-        QString dataToSign = publicKey + QString::number(timestamp);
+        QString dataToSign = publicKey_ + QString::number(timestamp);
         
         // Create temporary FFI context to import keys and sign
         rnp_ffi_t ffi = nullptr;
@@ -110,7 +137,7 @@ void IdentificationToken::setIdentificationToken(const QString& publicKey, const
         
         // Import the secret key
         rnp_input_t key_input = nullptr;
-        QByteArray privateKeyBytes = privateKey.toUtf8();
+        QByteArray privateKeyBytes = privateKey_.toUtf8();
         if (rnp_input_from_memory(&key_input, 
                                   reinterpret_cast<const uint8_t*>(privateKeyBytes.constData()),
                                   privateKeyBytes.size(),
@@ -228,7 +255,7 @@ void IdentificationToken::setIdentificationToken(const QString& publicKey, const
         rnp_ffi_destroy(ffi);
         
         // Create public key hash (first 16 chars of SHA-256 for brevity in QR)
-        QByteArray publicKeyBytes = publicKey.toUtf8();
+        QByteArray publicKeyBytes = publicKey_.toUtf8();
         QByteArray hash = QCryptographicHash::hash(publicKeyBytes, QCryptographicHash::Sha256);
         QString publicKeyHash = hash.toHex().left(16);
         
@@ -247,7 +274,7 @@ void IdentificationToken::setIdentificationToken(const QString& publicKey, const
         qWarning() << "Failed to create signed token:" << e.what();
         
         // Fallback to simple hash-based token (anonymous)
-        QByteArray keyBytes = publicKey.toUtf8();
+        QByteArray keyBytes = publicKey_.toUtf8();
         QByteArray keyHash = QCryptographicHash::hash(keyBytes, QCryptographicHash::Sha256);
         qint64 timestamp = QDateTime::currentSecsSinceEpoch();
         QString tokenData = QString("PIT:%1:%2").arg(timestamp).arg(keyHash.toHex());
@@ -258,10 +285,35 @@ void IdentificationToken::setIdentificationToken(const QString& publicKey, const
     }
 }
 
+void IdentificationToken::updateCountdown()
+{
+    countdown_--;
+    if (countdown_ <= 0) {
+        countdown_ = 10;
+    }
+    timerLabel_->setText(QString("Refreshes in: %1s").arg(countdown_));
+}
+
+void IdentificationToken::refreshQRCode()
+{
+    // Regenerate QR code with new timestamp
+    generateQRCodeWithTimestamp();
+    
+    // Reset countdown and restart timer
+    countdown_ = 10;
+    timerLabel_->setText(QString("Refreshes in: %1s").arg(countdown_));
+    refreshTimer_->start(10000); // Schedule next refresh
+}
+
 void IdentificationToken::clear()
 {
     publicKey_.clear();
+    privateKey_.clear();
     qrImageLabel_->clear();
+    timerLabel_->setVisible(false);
+    countdownTimer_->stop();
+    refreshTimer_->stop();
+    countdown_ = 10;
 }
 
 void IdentificationToken::downloadPIT()

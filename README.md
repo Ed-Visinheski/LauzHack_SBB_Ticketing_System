@@ -4,16 +4,16 @@ Anonymous Ticketing System solution for SBB LauzHack Hackathon
 
 # App Features
 
-The apps will have 3 tabs. Home/Search, Your Tickets and your Personal Identification Token (PIT)
+The apps will have 3 tabs. Home/Search, Your Tickets and your Personal Identity Token (PIT)
 
 - Home/Search: Journey Departure and Destination, with date and time selection.
     - This will be a mock version of a train time-table. Fake departure and destination cities by simply always creating a train departure every 30 minutes. Give a fake length of 1 hour? (might not be necessary)
 - Your Tickets
     - This will hold all your tickets, with their STATIC QR codes (they will not change) and can be used multiple times.
     - This sections will not hold any of the user’s personal details. Once the ticket is scanned on the inspector’s app it will only display the departure time, the specific train, arrival time and a section telling the inspector to verify the user
-- Personal Identification Token
-    - This will be a QR code of your Personal Identification Token. This token will be generated from the user’s private key. It can be verified by using the user’s public key to determine if it actually is them.
-    - The Ticket inspector will scan your Personal Identification Token (PIT) on their app. This will display if it is the SAME user that purchased the ticket or not. If the PIT is NOT valid, the inspector will know that this is not the user whom purchased the ticket and can issue a fine.
+- Personal Identity Token
+    - This will be a QR code of your Personal Identity Token. This token will be generated from the user’s private key. It can be verified by using the user’s public key to determine if it actually is them.
+    - The Ticket inspector will scan your Personal Identity Token (PIT) on their app. This will display if it is the SAME user that purchased the ticket or not. If the PIT is NOT valid, the inspector will know that this is not the user whom purchased the ticket and can issue a fine.
 
 # What will be Required For this Project:
 
@@ -54,4 +54,4 @@ The apps will have 3 tabs. Home/Search, Your Tickets and your Personal Identific
         - OpenPGP-compatible key formats
         - Lightweight and cross-platform support ideal for Qt-based apps
     - The library is modern, actively maintained, and used in production applications such as Mozilla Thunderbird.
-    - RNP enables secure creation and verification of the **Personal Identification Token (PIT)** using the user’s private key and inspector’s public key.
+    - RNP enables secure creation and verification of the **Personal Identity Token (PIT)** using the user’s private key and inspector’s public key.

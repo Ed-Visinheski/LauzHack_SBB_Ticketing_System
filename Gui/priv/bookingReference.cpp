@@ -22,13 +22,22 @@ TicketCard::TicketCard(const TicketInfo& ticket, QWidget* parent)
 {
 
     auto mainLayout = new QVBoxLayout(this);
-    // mainLayout->setContentsMargins(16, 16, 16, 16);
-    // mainLayout->setSpacing(12);
+    mainLayout->setContentsMargins(20, 20, 20, 20);
+    mainLayout->setSpacing(16);
+    
+    // Modern card styling with rounded corners and shadow
+    setStyleSheet(
+        "TicketCard { "
+        "  background-color: white; "
+        "  border-radius: 12px; "
+        "  border: 1px solid #e0e0e0; "
+        "}"
+    );
 
     // Header: Booking reference and status
     auto headerLayout = new QHBoxLayout();
     auto refLabel = new QLabel("Ref: " + ticket_.bookingReference(), this);
-    refLabel->setStyleSheet("font-size: 20px; font-weight: bold; color: #ec0001; border: none;");
+    refLabel->setStyleSheet("font-size: 16px; font-weight: 600; color: #666; border: none; background: transparent;");
     
     headerLayout->addWidget(refLabel);
     headerLayout->addStretch();
@@ -38,32 +47,32 @@ TicketCard::TicketCard(const TicketInfo& ticket, QWidget* parent)
     routeLayout->setSpacing(12);
     
     auto fromLabel = new QLabel(ticket_.departure(), this);
-    fromLabel->setStyleSheet("font-size: 16px; font-weight: bold; color: #333; border: none;");
+    fromLabel->setStyleSheet("font-size: 20px; font-weight: bold; color: #000; border: none; background: transparent;");
     
     auto arrowLabel = new QLabel("→", this);
-    arrowLabel->setStyleSheet("font-size: 20px; color: #999; border: none;");
+    arrowLabel->setStyleSheet("font-size: 20px; color: #eb0000; border: none; background: transparent;");
     
     auto toLabel = new QLabel(ticket_.destination(), this);
-    toLabel->setStyleSheet("font-size: 16px; font-weight: bold; color: #333; border: none;");
+    toLabel->setStyleSheet("font-size: 20px; font-weight: bold; color: #000; border: none; background: transparent;");
     
     routeLayout->addWidget(fromLabel);
     routeLayout->addWidget(arrowLabel);
     routeLayout->addWidget(toLabel);
     routeLayout->addStretch();
 
-    // Date and time row
+    // Date and time row with modern icons
     auto dateTimeLayout = new QHBoxLayout();
     dateTimeLayout->setSpacing(20);
     
     auto dateIcon = new QLabel("📅", this);
-    dateIcon->setStyleSheet("font-size: 14px; border: none;");
+    dateIcon->setStyleSheet("font-size: 16px; border: none; background: transparent;");
     auto dateLabel = new QLabel(ticket_.date().toString("MMM d, yyyy"), this);
-    dateLabel->setStyleSheet("font-size: 14px; color: #666; border: none;");
+    dateLabel->setStyleSheet("font-size: 15px; color: #666; border: none; background: transparent;");
     
     auto timeIcon = new QLabel("🕐", this);
-    timeIcon->setStyleSheet("font-size: 14px; border: none;");
+    timeIcon->setStyleSheet("font-size: 16px; border: none; background: transparent;");
     auto timeLabel = new QLabel(ticket_.time().toString("hh:mm"), this);
-    timeLabel->setStyleSheet("font-size: 14px; color: #666; border: none;");
+    timeLabel->setStyleSheet("font-size: 15px; color: #666; border: none; background: transparent;");
     
     dateTimeLayout->addWidget(dateIcon);
     dateTimeLayout->addWidget(dateLabel);
@@ -78,16 +87,20 @@ TicketCard::TicketCard(const TicketInfo& ticket, QWidget* parent)
     divider->setStyleSheet("background-color: #e0e0e0; border: none;");
     divider->setFixedHeight(1);
 
-    // QR Code button
+    // QR Code button with modern SBB styling
     auto qrButton = new QPushButton("View QR Code", this);
-    qrButton->setFixedHeight(36);
+    qrButton->setFixedHeight(44);
+    qrButton->setCursor(Qt::PointingHandCursor);
     qrButton->setStyleSheet(
         "QPushButton { "
-        "  background-color: #ec0001; color: white; font-weight: bold; "
-        "  font-size: 13px; border: none; border-radius: 6px; "
+        "  background-color: #eb0000; color: white; font-weight: 600; "
+        "  font-size: 14px; border: none; border-radius: 8px; "
         "} "
         "QPushButton:hover { "
-        "  background-color: #d00001; "
+        "  background-color: #c00000; "
+        "} "
+        "QPushButton:pressed { "
+        "  background-color: #a00000; "
         "}"
     );
     connect(qrButton, &QPushButton::clicked, this, [this]() {
@@ -113,43 +126,41 @@ BookingReference::BookingReference(QWidget* parent)
     mainLayout->setContentsMargins(0, 0, 0, 0);
     mainLayout->setSpacing(0);
 
-    // Title
-    auto titleLabel = new QLabel("My Tickets", this);
-    titleLabel->setStyleSheet("font-size: 20px; font-weight: bold; color: #333; padding: 16px;");
-
-    // Scroll area for tickets
+    // Scroll area for tickets with modern styling
     scrollArea_ = new QScrollArea(this);
     scrollArea_->setWidgetResizable(true);
     scrollArea_->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     scrollArea_->setStyleSheet(
         "QScrollArea { border: none; background-color: transparent; } "
         "QScrollBar:vertical { "
-        "  border: none; background: #f5f5f5; width: 8px; border-radius: 4px; "
+        "  border: none; background: #e5e5e5; width: 10px; border-radius: 5px; "
         "} "
         "QScrollBar::handle:vertical { "
-        "  background: #ccc; border-radius: 4px; min-height: 20px; "
+        "  background: #bbb; border-radius: 5px; min-height: 30px; "
         "} "
         "QScrollBar::handle:vertical:hover { "
         "  background: #999; "
+        "} "
+        "QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { "
+        "  height: 0px; "
         "}"
     );
 
     // Container widget inside scroll area
     ticketContainer_ = new QWidget();
     ticketLayout_ = new QVBoxLayout(ticketContainer_);
-    ticketLayout_->setContentsMargins(16, 0, 16, 16);
+    ticketLayout_->setContentsMargins(20, 20, 20, 20);
     ticketLayout_->setSpacing(16);
     ticketLayout_->addStretch();
     ticketContainer_->setLayout(ticketLayout_);
     
     scrollArea_->setWidget(ticketContainer_);
 
-    // No tickets message
+    // No tickets message with modern styling
     noTicketLabel_ = new QLabel("No tickets yet\n\nBook your first ticket from the Home page", this);
-    noTicketLabel_->setStyleSheet("font-size: 15px; color: #999; padding: 40px;");
+    noTicketLabel_->setStyleSheet("font-size: 16px; color: #999; padding: 60px; line-height: 1.6;");
     noTicketLabel_->setAlignment(Qt::AlignCenter);
 
-    mainLayout->addWidget(titleLabel);
     mainLayout->addWidget(scrollArea_, 1);
     mainLayout->addWidget(noTicketLabel_);
 

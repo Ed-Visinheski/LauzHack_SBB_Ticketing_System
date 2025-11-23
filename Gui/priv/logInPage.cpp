@@ -11,58 +11,92 @@ LoginPage::LoginPage(QWidget* parent)
     setStyleSheet("background-color: #f5f5f5;");
 
     auto mainLayout = new QVBoxLayout(this);
-    mainLayout->setContentsMargins(40, 60, 40, 60);
-    mainLayout->setSpacing(20);
+    mainLayout->setContentsMargins(0, 0, 0, 0);
+    mainLayout->setSpacing(0);
 
-    mainLayout->addStretch(1);
+    // Add SBB header with logo
+    auto headerWidget = new QWidget(this);
+    headerWidget->setStyleSheet("background-color: #eb0000;");
+    headerWidget->setFixedHeight(80);
+    auto headerLayout = new QHBoxLayout(headerWidget);
+    headerLayout->setContentsMargins(20, 15, 20, 15);
+    
+    // Add SBB logo
+    auto logoLabel = new QLabel(headerWidget);
+    logoLabel->setAlignment(Qt::AlignCenter);
+    logoLabel->setFixedSize(50, 50);
+    logoLabel->setStyleSheet("background: transparent; border: none; padding: 0;");
+    QPixmap logoPix("icons/SBB_logo.svg");
+    if (!logoPix.isNull()) {
+        logoLabel->setPixmap(logoPix.scaled(logoLabel->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    }
+    headerLayout->addWidget(logoLabel);
+    headerLayout->addStretch();
+    
+    mainLayout->addWidget(headerWidget);
+
+    // Content area
+    auto contentWidget = new QWidget(this);
+    contentWidget->setStyleSheet("background-color: #f5f5f5;");
+    auto contentLayout = new QVBoxLayout(contentWidget);
+    contentLayout->setContentsMargins(40, 40, 40, 40);
+    contentLayout->setSpacing(20);
+
+    contentLayout->addStretch(1);
 
     // Title
-    auto titleLabel = new QLabel("SBB Login", this);
-    titleLabel->setStyleSheet("font-size: 32px; font-weight: bold; color: #ec0001;");
+    auto titleLabel = new QLabel("Welcome Back", contentWidget);
+    titleLabel->setStyleSheet("font-size: 28px; font-weight: 600; color: #333;");
     titleLabel->setAlignment(Qt::AlignCenter);
-    mainLayout->addWidget(titleLabel);
+    contentLayout->addWidget(titleLabel);
 
-    mainLayout->addSpacing(20);
+    auto subtitleLabel = new QLabel("Log in to access your tickets", contentWidget);
+    subtitleLabel->setStyleSheet("font-size: 14px; color: #666;");
+    subtitleLabel->setAlignment(Qt::AlignCenter);
+    contentLayout->addWidget(subtitleLabel);
+
+    contentLayout->addSpacing(20);
 
     // Login container
-    auto loginContainer = new QWidget(this);
-    loginContainer->setStyleSheet("background-color: white; border-radius: 12px;");
-    loginContainer->setMaximumWidth(360);
+    auto loginContainer = new QWidget(contentWidget);
+    loginContainer->setStyleSheet("background-color: white; border-radius: 12px; border: 1px solid #e0e0e0;");
+    loginContainer->setMaximumWidth(500);
     
     auto containerLayout = new QVBoxLayout(loginContainer);
-    containerLayout->setContentsMargins(30, 30, 30, 30);
-    containerLayout->setSpacing(16);
+    containerLayout->setContentsMargins(32, 32, 32, 32);
+    containerLayout->setSpacing(20);
 
     // Email
     auto emailLabel = new QLabel("Email:", loginContainer);
-    emailLabel->setStyleSheet("font-weight: bold; font-size: 14px; color: #333;");
+    emailLabel->setStyleSheet("font-weight: 600; font-size: 13px; color: #333; border: none; background: transparent;");
     emailEdit_ = new QLineEdit(loginContainer);
     emailEdit_->setPlaceholderText("Enter your email");
-    emailEdit_->setFixedHeight(44);
+    emailEdit_->setMinimumHeight(44);
     emailEdit_->setStyleSheet(
         "QLineEdit { "
-        "  padding: 10px; border: 2px solid #ddd; border-radius: 6px; "
-        "  font-size: 14px; color: #333; "
+        "  padding: 12px 16px; border: 2px solid #e0e0e0; border-radius: 8px; "
+        "  font-size: 14px; color: #000; background-color: #fafafa; "
         "} "
         "QLineEdit:focus { "
-        "  border-color: #ec0001; "
+        "  border-color: #eb0000; background-color: white; "
         "}"
     );
 
     // Password
     auto passwordLabel = new QLabel("Password:", loginContainer);
-    passwordLabel->setStyleSheet("font-weight: bold; font-size: 14px; color: #333;");
+    passwordLabel->setStyleSheet("font-weight: 600; font-size: 13px; color: #333; border: none; background: transparent;");
     passwordEdit_ = new QLineEdit(loginContainer);
     passwordEdit_->setPlaceholderText("Enter your password");
     passwordEdit_->setEchoMode(QLineEdit::Password);
-    passwordEdit_->setFixedHeight(44);
+    passwordEdit_->setMinimumHeight(44);
+    passwordEdit_->setMinimumWidth(280);
     passwordEdit_->setStyleSheet(
         "QLineEdit { "
-        "  padding: 10px; border: 2px solid #ddd; border-radius: 6px; "
-        "  font-size: 14px; color: #333; "
+        "  padding: 12px 16px; border: 2px solid #e0e0e0; border-radius: 8px; "
+        "  font-size: 14px; color: #000; background-color: #fafafa; "
         "} "
         "QLineEdit:focus { "
-        "  border-color: #ec0001; "
+        "  border-color: #eb0000; background-color: white; "
         "}"
     );
 
@@ -70,22 +104,23 @@ LoginPage::LoginPage(QWidget* parent)
     statusLabel_ = new QLabel("", loginContainer);
     statusLabel_->setAlignment(Qt::AlignCenter);
     statusLabel_->setWordWrap(true);
-    statusLabel_->setStyleSheet("font-size: 12px; min-height: 20px;");
+    statusLabel_->setStyleSheet("font-size: 13px; min-height: 20px;");
     statusLabel_->hide();
 
     // Login button
     loginButton_ = new QPushButton("Login", loginContainer);
-    loginButton_->setFixedHeight(48);
+    loginButton_->setMinimumHeight(50);
+    loginButton_->setCursor(Qt::PointingHandCursor);
     loginButton_->setStyleSheet(
         "QPushButton { "
-        "  background-color: #ec0001; color: white; font-weight: bold; "
-        "  font-size: 16px; border: none; border-radius: 6px; "
+        "  background-color: #eb0000; color: white; font-weight: 600; "
+        "  font-size: 15px; border: none; border-radius: 8px; "
         "} "
         "QPushButton:hover { "
-        "  background-color: #d00001; "
+        "  background-color: #c00000; "
         "} "
         "QPushButton:pressed { "
-        "  background-color: #b00001; "
+        "  background-color: #a00000; "
         "}"
     );
 
@@ -100,16 +135,16 @@ LoginPage::LoginPage(QWidget* parent)
     containerLayout->addWidget(statusLabel_);
     containerLayout->addWidget(loginButton_);
 
-    // Center container
+    // Center the login container
     auto centerLayout = new QHBoxLayout();
     centerLayout->addStretch();
     centerLayout->addWidget(loginContainer);
     centerLayout->addStretch();
-    mainLayout->addLayout(centerLayout);
+    contentLayout->addLayout(centerLayout);
 
-    mainLayout->addStretch(2);
+    contentLayout->addStretch(2);
 
-    setLayout(mainLayout);
+    mainLayout->addWidget(contentWidget);
 }
 
 void LoginPage::handleLogin()

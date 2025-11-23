@@ -45,17 +45,56 @@ void Window::setupMainUI()
     topBar_ = new TopBar(mainAppWidget);
     topBar_->setFixedHeight(64);
 
-    // Create three persistent pages with different background colors
+    // Create three persistent pages with modern SBB styling
     homePage_ = new QWidget(this);
-    homePage_->setStyleSheet("background-color: #e8f5e9;"); // light green
+    homePage_->setStyleSheet("background-color: #f5f5f5;"); // Light gray background like SBB app
 
-    // Add LocationSelection to home page
+    // Add LocationSelection to home page with better styling
     auto homeLayout = new QVBoxLayout(homePage_);
-    homeLayout->setContentsMargins(20, 20, 20, 20);
-    locationSelection_ = new LocationSelection(homePage_);
-    locationSelection_->setMaximumWidth(400);
-    homeLayout->addWidget(locationSelection_, 0, Qt::AlignCenter | Qt::AlignTop);
-    homeLayout->addStretch();
+    homeLayout->setContentsMargins(0, 0, 0, 0);
+    homeLayout->setSpacing(0);
+    
+    // Add header section
+    auto headerWidget = new QWidget(homePage_);
+    headerWidget->setStyleSheet("background-color: #eb0000;"); // SBB red
+    auto headerLayout = new QHBoxLayout(headerWidget);
+    headerLayout->setContentsMargins(16, 10, 16, 10);
+    headerLayout->setSpacing(12);
+    
+    // Add SBB logo at the left
+    auto logoLabel = new QLabel(headerWidget);
+    logoLabel->setAlignment(Qt::AlignCenter);
+    logoLabel->setFixedSize(40, 40);
+    logoLabel->setStyleSheet("background: transparent; border: none; padding: 0;");
+    QPixmap logoPix("icons/SBB_logo.svg");
+    if (!logoPix.isNull()) {
+        logoLabel->setPixmap(logoPix.scaled(logoLabel->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    }
+    headerLayout->addWidget(logoLabel);
+    
+    // Add title text next to logo
+    auto titleLabel = new QLabel("Book Your Journey", headerWidget);
+    titleLabel->setStyleSheet("color: white; font-size: 18px; font-weight: 600;");
+    headerLayout->addWidget(titleLabel);
+    headerLayout->addStretch();
+    
+    homeLayout->addWidget(headerWidget);
+    
+    // Add location selection in a card
+    auto contentWidget = new QWidget(homePage_);
+    contentWidget->setStyleSheet("background-color: transparent;");
+    auto contentLayout = new QVBoxLayout(contentWidget);
+    contentLayout->setContentsMargins(20, 20, 20, 20);
+    
+    locationSelection_ = new LocationSelection(contentWidget);
+    locationSelection_->setMaximumWidth(500);
+    locationSelection_->setStyleSheet(
+        "QWidget { background-color: white; border-radius: 12px; padding: 20px; }"
+    );
+    contentLayout->addWidget(locationSelection_, 0, Qt::AlignCenter | Qt::AlignTop);
+    contentLayout->addStretch();
+    
+    homeLayout->addWidget(contentWidget, 1);
     homePage_->setLayout(homeLayout);
 
     // Connect search signal: store booking, clear inputs, switch to ticket page
@@ -83,24 +122,80 @@ void Window::setupMainUI()
         });
 
     ticketPage_ = new QWidget(this);
-    ticketPage_->setStyleSheet("background-color: #e3f2fd;"); // light blue
+    ticketPage_->setStyleSheet("background-color: #f5f5f5;"); // Light gray background like SBB app
 
-    // Add BookingReference to ticket page (full width scrollable)
+    // Add BookingReference to ticket page with modern styling
     auto ticketLayout = new QVBoxLayout(ticketPage_);
     ticketLayout->setContentsMargins(0, 0, 0, 0);
     ticketLayout->setSpacing(0);
+    
+    // Add header section for ticket page
+    auto ticketHeaderWidget = new QWidget(ticketPage_);
+    ticketHeaderWidget->setStyleSheet("background-color: #eb0000;"); // SBB red
+    auto ticketHeaderLayout = new QHBoxLayout(ticketHeaderWidget);
+    ticketHeaderLayout->setContentsMargins(16, 10, 16, 10);
+    ticketHeaderLayout->setSpacing(12);
+    
+    // Add SBB logo at the left
+    auto ticketLogoLabel = new QLabel(ticketHeaderWidget);
+    ticketLogoLabel->setAlignment(Qt::AlignCenter);
+    ticketLogoLabel->setFixedSize(40, 40);
+    ticketLogoLabel->setStyleSheet("background: transparent; border: none; padding: 0;");
+    QPixmap ticketLogoPix("icons/SBB_logo.svg");
+    if (!ticketLogoPix.isNull()) {
+        ticketLogoLabel->setPixmap(ticketLogoPix.scaled(ticketLogoLabel->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    }
+    ticketHeaderLayout->addWidget(ticketLogoLabel);
+    
+    // Add title text next to logo
+    auto ticketTitleLabel = new QLabel("My Tickets", ticketHeaderWidget);
+    ticketTitleLabel->setStyleSheet("color: white; font-size: 18px; font-weight: 600;");
+    ticketHeaderLayout->addWidget(ticketTitleLabel);
+    ticketHeaderLayout->addStretch();
+    
+    ticketLayout->addWidget(ticketHeaderWidget);
+    
+    // Add booking reference with card styling
     bookingReference_ = new BookingReference(ticketPage_);
     bookingReference_->setCompanyInfo(&companyInfo_); // Set company info for signing tickets
+    bookingReference_->setStyleSheet("background-color: transparent;");
     ticketLayout->addWidget(bookingReference_, 1); // stretch to fill
     ticketPage_->setLayout(ticketLayout);
 
     idPage_ = new QWidget(this);
-    idPage_->setStyleSheet("background-color: #fff3e0;"); // light orange
+    idPage_->setStyleSheet("background-color: #f5f5f5;"); // Light gray background like SBB app
 
-    // Add IdentificationToken to ID page
+    // Add IdentificationToken to ID page with modern styling
     auto idLayout = new QVBoxLayout(idPage_);
     idLayout->setContentsMargins(0, 0, 0, 0);
     idLayout->setSpacing(0);
+    
+    // Add header section for ID page
+    auto idHeaderWidget = new QWidget(idPage_);
+    idHeaderWidget->setStyleSheet("background-color: #eb0000;"); // SBB red
+    auto idHeaderLayout = new QHBoxLayout(idHeaderWidget);
+    idHeaderLayout->setContentsMargins(16, 10, 16, 10);
+    idHeaderLayout->setSpacing(12);
+    
+    // Add SBB logo at the left
+    auto idLogoLabel = new QLabel(idHeaderWidget);
+    idLogoLabel->setAlignment(Qt::AlignCenter);
+    idLogoLabel->setFixedSize(40, 40);
+    idLogoLabel->setStyleSheet("background: transparent; border: none; padding: 0;");
+    QPixmap idLogoPix("icons/SBB_logo.svg");
+    if (!idLogoPix.isNull()) {
+        idLogoLabel->setPixmap(idLogoPix.scaled(idLogoLabel->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    }
+    idHeaderLayout->addWidget(idLogoLabel);
+    
+    // Add title text next to logo
+    auto idTitleLabel = new QLabel("My Personal Identity Token", idHeaderWidget);
+    idTitleLabel->setStyleSheet("color: white; font-size: 18px; font-weight: 600;");
+    idHeaderLayout->addWidget(idTitleLabel);
+    idHeaderLayout->addStretch();
+    
+    idLayout->addWidget(idHeaderWidget);
+    
     identificationToken_ = new IdentificationToken(idPage_);
     idLayout->addWidget(identificationToken_, 1); // stretch to fill
     idPage_->setLayout(idLayout);
@@ -125,7 +220,7 @@ void Window::setupMainUI()
     auto mainLayout = new QVBoxLayout(this);
     mainLayout->setContentsMargins(0, 0, 0, 0);
     mainLayout->setSpacing(0);
-    mainLayout->addWidget(topBar_);
+    // mainLayout->addWidget(topBar_);
     mainLayout->addWidget(stacked_, 1); // stretch to fill middle
     mainLayout->addWidget(navBar_);
 

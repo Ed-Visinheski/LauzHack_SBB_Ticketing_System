@@ -6,6 +6,7 @@
 #include <QHBoxLayout>
 #include <QFileDialog>
 #include <QPixmap>
+#include <QScrollArea>
 #include "ticketOwnership.h"
 #include "companyInfo.h"
 

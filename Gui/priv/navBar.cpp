@@ -9,21 +9,43 @@ namespace fs = std::filesystem;
 NavBar::NavBar(QWidget* parent)
     : QWidget(parent)
 {
-    // Light grey background
-    setStyleSheet("background-color: #f0f0f0;");
+    // White background with top border
+    setStyleSheet("background-color: white; border-top: 1px solid #e0e0e0;");
 
     homeButton_ = new QPushButton(QIcon(QString("Icons/magnifying-glass_24px.png")), QString{}, this);
     ticketButton_ = new QPushButton(QIcon("Icons/ticket_24px.png"), QString{}, this);
     idButton_ = new QPushButton(QIcon("Icons/user_24px.png"), QString{}, this);
 
-    // Optional: set uniform size for buttons
-    homeButton_->setFixedSize(80, 40);
-    ticketButton_->setFixedSize(80, 40);
-    idButton_->setFixedSize(80, 40);
+    // Modern button styling with better sizing
+    QString buttonStyle = 
+        "QPushButton { "
+        "  background-color: transparent; "
+        "  border: none; "
+        "  border-radius: 8px; "
+        "  padding: 8px; "
+        "} "
+        "QPushButton:hover { "
+        "  background-color: #f5f5f5; "
+        "} "
+        "QPushButton:pressed { "
+        "  background-color: #e0e0e0; "
+        "}";
+    
+    homeButton_->setStyleSheet(buttonStyle);
+    ticketButton_->setStyleSheet(buttonStyle);
+    idButton_->setStyleSheet(buttonStyle);
+    
+    homeButton_->setFixedSize(60, 50);
+    ticketButton_->setFixedSize(60, 50);
+    idButton_->setFixedSize(60, 50);
+    
+    homeButton_->setCursor(Qt::PointingHandCursor);
+    ticketButton_->setCursor(Qt::PointingHandCursor);
+    idButton_->setCursor(Qt::PointingHandCursor);
 
     
     auto layout = new QHBoxLayout(this);
-    layout->setContentsMargins(16, 12, 16, 12);
+    layout->setContentsMargins(20, 8, 20, 8);
     layout->setSpacing(0);
 
     layout->addStretch(1);
