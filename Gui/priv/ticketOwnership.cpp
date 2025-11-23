@@ -2,6 +2,7 @@
 #include "PgpKeyManager.h"
 #include <QStringList>
 #include <QCryptographicHash>
+#include <QDateTime>
 #include <QDebug>
 #include <rnp/rnp.h>
 #include <rnp/rnp_err.h>
@@ -149,6 +150,20 @@ bool TicketOwnership::parsePIT(const QString& pitQRData, QString& outPublicKey,
     outTimestamp = parts[2].toLongLong(&ok);
     if (!ok) {
         qWarning() << "Invalid timestamp in PIT:" << parts[2];
+        return false;
+    }
+
+    // Check if PIT is older than 20 seconds
+    qint64 currentTime = QDateTime::currentSecsSinceEpoch();
+    qint64 age = currentTime - outTimestamp;
+    
+    if (age > 20) {
+        qWarning() << "PIT expired: Age is" << age << "seconds (max 20 seconds allowed)";
+        return false;
+    }
+    
+    if (age < 0) {
+        qWarning() << "PIT timestamp is in the future (clock skew)";
         return false;
     }
 

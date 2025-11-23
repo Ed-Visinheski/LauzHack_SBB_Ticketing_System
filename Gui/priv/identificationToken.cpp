@@ -26,7 +26,7 @@ IdentificationToken::IdentificationToken(QWidget* parent)
     mainLayout->addSpacing(10);
 
     // Timer label
-    timerLabel_ = new QLabel("Refreshes in: 10s", this);
+    timerLabel_ = new QLabel("Refreshes in: 20s", this);
     timerLabel_->setStyleSheet("font-size: 14px; font-weight: 600; color: #eb0000;");
     timerLabel_->setAlignment(Qt::AlignCenter);
     timerLabel_->setVisible(false);
@@ -114,10 +114,10 @@ void IdentificationToken::setIdentificationToken(const QString& publicKey, const
     
     // Show timer label and start countdown
     timerLabel_->setVisible(true);
-    countdown_ = 10;
+    countdown_ = 20;
     timerLabel_->setText(QString("Refreshes in: %1s").arg(countdown_));
     countdownTimer_->start(1000); // Update every second
-    refreshTimer_->start(10000); // Refresh after 10 seconds
+    refreshTimer_->start(20000); // Refresh after 20 seconds
 }
 
 void IdentificationToken::generateQRCodeWithTimestamp()
@@ -289,7 +289,7 @@ void IdentificationToken::updateCountdown()
 {
     countdown_--;
     if (countdown_ <= 0) {
-        countdown_ = 10;
+        countdown_ = 20;
     }
     timerLabel_->setText(QString("Refreshes in: %1s").arg(countdown_));
 }
@@ -300,9 +300,9 @@ void IdentificationToken::refreshQRCode()
     generateQRCodeWithTimestamp();
     
     // Reset countdown and restart timer
-    countdown_ = 10;
+    countdown_ = 20;
     timerLabel_->setText(QString("Refreshes in: %1s").arg(countdown_));
-    refreshTimer_->start(10000); // Schedule next refresh
+    refreshTimer_->start(20000); // Schedule next refresh
 }
 
 void IdentificationToken::clear()
@@ -313,7 +313,7 @@ void IdentificationToken::clear()
     timerLabel_->setVisible(false);
     countdownTimer_->stop();
     refreshTimer_->stop();
-    countdown_ = 10;
+    countdown_ = 20;
 }
 
 void IdentificationToken::downloadPIT()
