@@ -118,6 +118,60 @@ Install them or set the appropriate *_ROOT cache variables.")
     )
 endif()
 
+# ---- Find QRencode (cross-platform) ---------------------------
+set(QRENCODE_FOUND FALSE)
+if(PkgConfig_FOUND)
+    pkg_check_modules(QRENCODE QUIET libqrencode)
+    if(QRENCODE_FOUND)
+        message(STATUS "Found QRencode via pkg-config")
+        message(STATUS "  Include dirs: ${QRENCODE_INCLUDE_DIRS}")
+        message(STATUS "  Libraries: ${QRENCODE_LIBRARIES}")
+        message(STATUS "  Library dirs: ${QRENCODE_LIBRARY_DIRS}")
+        message(STATUS "  Link libraries: ${QRENCODE_LINK_LIBRARIES}")
+    endif()
+endif()
+
+if(QRENCODE_FOUND)
+    # pkg-config found it - use the full library paths
+    set(QRENCODE_LIBRARIES ${QRENCODE_LINK_LIBRARIES})
+else()
+    # Fallback manual search
+    set(QRENCODE_HINTS "")
+    
+    if(QRENCODE_ROOT)
+        list(APPEND QRENCODE_HINTS "${QRENCODE_ROOT}")
+    endif()
+    
+    list(APPEND QRENCODE_HINTS
+        /opt/homebrew/opt/qrencode       # macOS Apple Silicon Homebrew
+        /opt/homebrew/Cellar/qrencode/4.1.1  # Specific version path
+        /usr/local                        # macOS Intel / generic
+        /usr                              # system install
+    )
+    
+    find_path(QRENCODE_INCLUDE_DIR
+        NAMES qrencode.h
+        PATH_SUFFIXES include
+        HINTS ${QRENCODE_HINTS}
+    )
+    
+    find_library(QRENCODE_LIBRARY
+        NAMES libqrencode.a qrencode
+        PATH_SUFFIXES lib
+        HINTS ${QRENCODE_HINTS}
+    )
+    
+    if(NOT QRENCODE_INCLUDE_DIR OR NOT QRENCODE_LIBRARY)
+        message(FATAL_ERROR "Could not find QRencode (qrencode.h and libqrencode). \
+Install it via: 'brew install qrencode' on macOS, or 'apt-get install libqrencode-dev' on Ubuntu.")
+    endif()
+    
+    message(STATUS "Found QRencode include: ${QRENCODE_INCLUDE_DIR}")
+    message(STATUS "Found QRencode library: ${QRENCODE_LIBRARY}")
+    set(QRENCODE_INCLUDE_DIRS "${QRENCODE_INCLUDE_DIR}")
+    set(QRENCODE_LIBRARIES "${QRENCODE_LIBRARY}")
+endif()
+
 # ---- Subdirectories --------------------------------------------
 add_subdirectory(Core)
 add_subdirectory(Gui)
@@ -130,6 +184,7 @@ target_link_libraries(main
         core
         gui
         ${RNP_LIBRARIES}
+        ${QRENCODE_LIBRARIES}
 )
 
 target_compile_options(main PRIVATE -Wall -Wextra -Wpedantic)
@@ -138,6 +193,7 @@ target_include_directories(main PRIVATE
     ${CMAKE_SOURCE_DIR}/Core/pub
     ${CMAKE_SOURCE_DIR}/Gui/pub
     ${RNP_INCLUDE_DIRS}
+    ${QRENCODE_INCLUDE_DIRS}
 )
 
 # Create a small INTERFACE target to expose project-wide headers (root folder)
@@ -171,7 +227,7 @@ endif()
 
 # If Core/Gui code also includes <rnp/rnp.h>, give them the same deps:
 target_link_libraries(core PRIVATE ${RNP_LIBRARIES})
-target_link_libraries(gui  PRIVATE ${RNP_LIBRARIES})
+target_link_libraries(gui  PRIVATE ${RNP_LIBRARIES} ${QRENCODE_LIBRARIES})
 
 target_include_directories(core PRIVATE ${RNP_INCLUDE_DIRS})
-target_include_directories(gui  PRIVATE ${RNP_INCLUDE_DIRS})
+target_include_directories(gui  PRIVATE ${RNP_INCLUDE_DIRS} ${QRENCODE_INCLUDE_DIRS})

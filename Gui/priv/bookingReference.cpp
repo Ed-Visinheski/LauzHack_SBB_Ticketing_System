@@ -1,4 +1,5 @@
 #include "bookingReference.h"
+#include "qrCodeGen.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QFrame>
@@ -175,16 +176,11 @@ void BookingReference::setupQROverlay()
     
     overlayLayout->addSpacing(20);
     
-    // QR Code image
+    // QR Code image (will be generated when ticket is shown)
     qrImageLabel_ = new QLabel(qrOverlay_);
     qrImageLabel_->setAlignment(Qt::AlignCenter);
     qrImageLabel_->setStyleSheet("background-color: white; padding: 20px; border-radius: 12px;");
     qrImageLabel_->setFixedSize(320, 320);
-    
-    QPixmap qrPixmap("Icons/QR_Code_temp.png");
-    if (!qrPixmap.isNull()) {
-        qrImageLabel_->setPixmap(qrPixmap.scaled(280, 280, Qt::KeepAspectRatio, Qt::SmoothTransformation));
-    }
     
     overlayLayout->addWidget(qrImageLabel_, 0, Qt::AlignCenter);
     
@@ -217,6 +213,11 @@ void BookingReference::showQRCode(const TicketInfo& ticket)
 {
     // Update title with booking reference
     qrTitleLabel_->setText("Ticket: " + ticket.bookingReference());
+    
+    // Generate QR code from booking reference
+    QImage qrImage = QRCodeGenerator::generateQRCode(ticket.bookingReference(), 280);
+    QPixmap qrPixmap = QPixmap::fromImage(qrImage);
+    qrImageLabel_->setPixmap(qrPixmap);
     
     // Show overlay centered on the page
     qrOverlay_->setGeometry(0, 0, width(), height());
