@@ -35,6 +35,7 @@ public:
 private slots:
     void showQRCode(const TicketInfo& ticket);
     void hideQRCode();
+    void downloadCurrentQRCode();
 
 private:
     void setupQROverlay();
@@ -48,7 +49,11 @@ private:
     QWidget* qrOverlay_ = nullptr;
     QLabel* qrImageLabel_ = nullptr;
     QLabel* qrTitleLabel_ = nullptr;
+    QPushButton* downloadQRButton_ = nullptr;
     
     // Company info for signing tickets
     const CompanyInfo* companyInfo_ = nullptr;
+    
+    // Current ticket being displayed
+    TicketInfo currentTicket_;
 };

@@ -9,6 +9,8 @@
 #include <QScrollArea>
 #include <QDateTime>
 #include <QCryptographicHash>
+#include <QFileDialog>
+#include <QMessageBox>
 #include <rnp/rnp.h>
 #include <rnp/rnp_err.h>
 
@@ -190,6 +192,20 @@ void BookingReference::setupQROverlay()
     
     overlayLayout->addSpacing(20);
     
+    // Download button
+    downloadQRButton_ = new QPushButton("Download QR Code", qrOverlay_);
+    downloadQRButton_->setFixedSize(200, 50);
+    downloadQRButton_->setStyleSheet(
+        "QPushButton { "
+        "  background-color: #3498db; color: white; font-weight: bold; "
+        "  font-size: 16px; border: none; border-radius: 8px; "
+        "} "
+        "QPushButton:hover { "
+        "  background-color: #2980b9; "
+        "}"
+    );
+    connect(downloadQRButton_, &QPushButton::clicked, this, &BookingReference::downloadCurrentQRCode);
+    
     // Close button
     auto closeButton = new QPushButton("Close", qrOverlay_);
     closeButton->setFixedSize(200, 50);
@@ -206,6 +222,8 @@ void BookingReference::setupQROverlay()
     
     auto buttonLayout = new QHBoxLayout();
     buttonLayout->addStretch();
+    buttonLayout->addWidget(downloadQRButton_);
+    buttonLayout->addSpacing(10);
     buttonLayout->addWidget(closeButton);
     buttonLayout->addStretch();
     overlayLayout->addLayout(buttonLayout);
@@ -215,6 +233,9 @@ void BookingReference::setupQROverlay()
 
 void BookingReference::showQRCode(const TicketInfo& ticket)
 {
+    // Store current ticket for download
+    currentTicket_ = ticket;
+    
     // Update title with booking reference
     qrTitleLabel_->setText("Ticket: " + ticket.bookingReference());
     
@@ -357,10 +378,16 @@ void BookingReference::showQRCode(const TicketInfo& ticket)
             rnp_ffi_destroy(ffi);
         }
         
-        // Create ticket QR code: TICKET:bookingRef:timestamp:companySignature
-        QString ticketData = QString("TICKET:%1:%2:%3")
+        // Create user's public key hash (first 16 chars of SHA-256)
+        QByteArray userPublicKeyBytes = ticket.userPublicKey().toUtf8();
+        QByteArray userKeyHash = QCryptographicHash::hash(userPublicKeyBytes, QCryptographicHash::Sha256);
+        QString userPublicKeyHash = userKeyHash.toHex().left(16);
+        
+        // Create ticket QR code: TICKET:bookingRef:timestamp:userPubKeyHash:companySignature
+        QString ticketData = QString("TICKET:%1:%2:%3:%4")
             .arg(ticket.bookingReference())
             .arg(timestamp)
+            .arg(userPublicKeyHash)
             .arg(signatureHex);
         
         QImage qrImage = QRCodeGenerator::generateQRCode(ticketData, 280);
@@ -385,6 +412,44 @@ void BookingReference::showQRCode(const TicketInfo& ticket)
 void BookingReference::hideQRCode()
 {
     qrOverlay_->hide();
+}
+
+void BookingReference::downloadCurrentQRCode()
+{
+    if (qrImageLabel_->pixmap().isNull()) {
+        QMessageBox::warning(this, "No QR Code", "No QR code is currently displayed.");
+        return;
+    }
+    
+    if (!currentTicket_.isValid()) {
+        QMessageBox::warning(this, "Error", "Invalid ticket information.");
+        return;
+    }
+    
+    // Generate filename with booking reference and timestamp
+    QString timestamp = QDateTime::currentDateTime().toString("yyyyMMdd_HHmmss");
+    QString defaultFileName = QString("Ticket_%1_%2.png")
+        .arg(currentTicket_.bookingReference())
+        .arg(timestamp);
+    
+    QString fileName = QFileDialog::getSaveFileName(this,
+        "Save Ticket QR Code",
+        defaultFileName,
+        "PNG Image (*.png);;JPEG Image (*.jpg *.jpeg);;All Files (*)");
+    
+    if (fileName.isEmpty()) {
+        return;
+    }
+    
+    // Save the QR code pixmap
+    QPixmap pixmap = qrImageLabel_->pixmap();
+    if (pixmap.save(fileName)) {
+        QMessageBox::information(this, "Success", 
+            QString("Ticket QR code saved successfully!\nBooking: %1")
+            .arg(currentTicket_.bookingReference()));
+    } else {
+        QMessageBox::warning(this, "Error", "Failed to save QR code image.");
+    }
 }
 
 void BookingReference::addTicket(const TicketInfo& ticket)

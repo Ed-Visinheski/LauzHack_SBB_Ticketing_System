@@ -64,6 +64,9 @@ install_ubuntu() {
 
     # QR Code library
     $SUDO apt-get install -y --no-install-recommends libqrencode-dev
+    
+    # QR Code decoder (for inspector)
+    $SUDO apt-get install -y --no-install-recommends zbar-tools
 
     # Verify whether qmake or qtpaths are available; if not, give the user clear next steps.
     if command -v qmake >/dev/null 2>&1; then
@@ -127,6 +130,7 @@ install_macos() {
     brew install rnp
     brew install pkg-config
     brew install qrencode
+    brew install zbar
     
     info "macOS install finished. Verify with: clang --version && qmake --version || qtpaths --version"
 }

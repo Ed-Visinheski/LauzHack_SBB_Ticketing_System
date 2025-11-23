@@ -6,6 +6,8 @@
 #include <QPixmap>
 #include <QCryptographicHash>
 #include <QDateTime>
+#include <QFileDialog>
+#include <QMessageBox>
 #include <rnp/rnp.h>
 #include <rnp/rnp_err.h>
 
@@ -62,6 +64,27 @@ IdentificationToken::IdentificationToken(QWidget* parent)
     instructionLabel_->setAlignment(Qt::AlignCenter);
     instructionLabel_->setWordWrap(true);
     mainLayout->addWidget(instructionLabel_);
+
+    mainLayout->addSpacing(10);
+
+    // Download button
+    downloadButton_ = new QPushButton("Download PIT QR Code", this);
+    downloadButton_->setFixedSize(200, 40);
+    downloadButton_->setStyleSheet(
+        "QPushButton { "
+        "  background-color: #3498db; color: white; font-weight: bold; "
+        "  font-size: 14px; border: none; border-radius: 6px; "
+        "} "
+        "QPushButton:hover { background-color: #2980b9; } "
+        "QPushButton:pressed { background-color: #21618c; }"
+    );
+    connect(downloadButton_, &QPushButton::clicked, this, &IdentificationToken::downloadPIT);
+    
+    auto downloadLayout = new QHBoxLayout();
+    downloadLayout->addStretch();
+    downloadLayout->addWidget(downloadButton_);
+    downloadLayout->addStretch();
+    mainLayout->addLayout(downloadLayout);
 
     mainLayout->addStretch(2);
 
@@ -204,9 +227,14 @@ void IdentificationToken::setIdentificationToken(const QString& publicKey, const
         rnp_input_destroy(data_input);
         rnp_ffi_destroy(ffi);
         
-        // Create anonymous token format: PIT:timestamp:signature
-        // No email for anonymity
-        QString tokenData = QString("PIT:%1:%2")
+        // Create public key hash (first 16 chars of SHA-256 for brevity in QR)
+        QByteArray publicKeyBytes = publicKey.toUtf8();
+        QByteArray hash = QCryptographicHash::hash(publicKeyBytes, QCryptographicHash::Sha256);
+        QString publicKeyHash = hash.toHex().left(16);
+        
+        // Create anonymous token format: PIT:pubKeyHash:timestamp:signature
+        QString tokenData = QString("PIT:%1:%2:%3")
+            .arg(publicKeyHash)
             .arg(timestamp)
             .arg(signatureHex);
         
@@ -234,4 +262,33 @@ void IdentificationToken::clear()
 {
     publicKey_.clear();
     qrImageLabel_->clear();
+}
+
+void IdentificationToken::downloadPIT()
+{
+    if (qrImageLabel_->pixmap().isNull()) {
+        QMessageBox::warning(this, "No QR Code", "Please generate your PIT first by logging in.");
+        return;
+    }
+    
+    // Generate filename with timestamp
+    QString timestamp = QDateTime::currentDateTime().toString("yyyyMMdd_HHmmss");
+    QString defaultFileName = QString("PIT_QRCode_%1.png").arg(timestamp);
+    
+    QString fileName = QFileDialog::getSaveFileName(this,
+        "Save PIT QR Code",
+        defaultFileName,
+        "PNG Image (*.png);;JPEG Image (*.jpg *.jpeg);;All Files (*)");
+    
+    if (fileName.isEmpty()) {
+        return;
+    }
+    
+    // Save the QR code pixmap
+    QPixmap pixmap = qrImageLabel_->pixmap();
+    if (pixmap.save(fileName)) {
+        QMessageBox::information(this, "Success", "PIT QR code saved successfully!");
+    } else {
+        QMessageBox::warning(this, "Error", "Failed to save QR code image.");
+    }
 }

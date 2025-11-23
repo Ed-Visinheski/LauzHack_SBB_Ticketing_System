@@ -6,7 +6,7 @@
       "type": "lldb",
       "request": "launch",
       "program": "${workspaceFolder}/build/bin/main",
-      "args": [],
+      "args": ["--both"],
       "cwd": "${workspaceFolder}",
       "stopOnEntry": false,
       "preLaunchTask": "Build"
