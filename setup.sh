@@ -62,6 +62,9 @@ install_ubuntu() {
     $SUDO apt-get install -y --no-install-recommends \
         librnp-dev libbotan-2-dev libjson-c-dev libbz2-dev zlib1g-dev pkg-config
 
+    # QR Code library
+    $SUDO apt-get install -y --no-install-recommends libqrencode-dev
+
     # Verify whether qmake or qtpaths are available; if not, give the user clear next steps.
     if command -v qmake >/dev/null 2>&1; then
         info "Found qmake: $(command -v qmake)"
@@ -123,6 +126,7 @@ install_macos() {
 
     brew install rnp
     brew install pkg-config
+    brew install qrencode
     
     info "macOS install finished. Verify with: clang --version && qmake --version || qtpaths --version"
 }
