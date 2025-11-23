@@ -7,6 +7,10 @@
 #include <QGraphicsDropShadowEffect>
 #include <QTimer>
 #include <QScrollArea>
+#include <QDateTime>
+#include <QCryptographicHash>
+#include <rnp/rnp.h>
+#include <rnp/rnp_err.h>
 
 // ============ TicketCard Implementation ============
 
@@ -214,10 +218,163 @@ void BookingReference::showQRCode(const TicketInfo& ticket)
     // Update title with booking reference
     qrTitleLabel_->setText("Ticket: " + ticket.bookingReference());
     
-    // Generate QR code from booking reference
-    QImage qrImage = QRCodeGenerator::generateQRCode(ticket.bookingReference(), 280);
-    QPixmap qrPixmap = QPixmap::fromImage(qrImage);
-    qrImageLabel_->setPixmap(qrPixmap);
+    try {
+        if (!companyInfo_ || !companyInfo_->isValid()) {
+            throw std::runtime_error("Company info not available");
+        }
+        
+        // Get or generate timestamp for this ticket
+        qint64 timestamp = ticket.timestamp();
+        if (timestamp == 0) {
+            timestamp = QDateTime::currentSecsSinceEpoch();
+        }
+        
+        // Create data to sign: userPublicKey + bookingReference + timestamp
+        QString dataToSign = ticket.userPublicKey() + ticket.bookingReference() + QString::number(timestamp);
+        
+        // If ticket already has signed data, use it; otherwise generate signature
+        QString signatureHex = ticket.signedData();
+        
+        if (signatureHex.isEmpty()) {
+            // Sign using company's private key
+            rnp_ffi_t ffi = nullptr;
+            if (rnp_ffi_create(&ffi, "GPG", "GPG") != RNP_SUCCESS || !ffi) {
+                throw std::runtime_error("Failed to create RNP FFI for signing");
+            }
+            
+            // Import company's private key
+            QByteArray privateKeyBytes = companyInfo_->privateKey().toUtf8();
+            rnp_input_t key_input = nullptr;
+            if (rnp_input_from_memory(&key_input,
+                                      reinterpret_cast<const uint8_t*>(privateKeyBytes.constData()),
+                                      privateKeyBytes.size(),
+                                      false) != RNP_SUCCESS) {
+                rnp_ffi_destroy(ffi);
+                throw std::runtime_error("Failed to create input for company private key");
+            }
+            
+            if (rnp_import_keys(ffi, key_input, RNP_LOAD_SAVE_SECRET_KEYS, nullptr) != RNP_SUCCESS) {
+                rnp_input_destroy(key_input);
+                rnp_ffi_destroy(ffi);
+                throw std::runtime_error("Failed to import company private key");
+            }
+            rnp_input_destroy(key_input);
+            
+            // Sign the data
+            QByteArray dataBytes = dataToSign.toUtf8();
+            rnp_input_t data_input = nullptr;
+            if (rnp_input_from_memory(&data_input,
+                                      reinterpret_cast<const uint8_t*>(dataBytes.constData()),
+                                      dataBytes.size(),
+                                      false) != RNP_SUCCESS) {
+                rnp_ffi_destroy(ffi);
+                throw std::runtime_error("Failed to create input for data");
+            }
+            
+            rnp_output_t sig_output = nullptr;
+            if (rnp_output_to_memory(&sig_output, 0) != RNP_SUCCESS) {
+                rnp_input_destroy(data_input);
+                rnp_ffi_destroy(ffi);
+                throw std::runtime_error("Failed to create output for signature");
+            }
+            
+            rnp_op_sign_t sign_op = nullptr;
+            if (rnp_op_sign_detached_create(&sign_op, ffi, data_input, sig_output) != RNP_SUCCESS) {
+                rnp_output_destroy(sig_output);
+                rnp_input_destroy(data_input);
+                rnp_ffi_destroy(ffi);
+                throw std::runtime_error("Failed to create signing operation");
+            }
+            
+            // Get company key
+            rnp_identifier_iterator_t it = nullptr;
+            if (rnp_identifier_iterator_create(ffi, &it, "grip") != RNP_SUCCESS) {
+                rnp_op_sign_destroy(sign_op);
+                rnp_output_destroy(sig_output);
+                rnp_input_destroy(data_input);
+                rnp_ffi_destroy(ffi);
+                throw std::runtime_error("Failed to create key iterator");
+            }
+            
+            const char* grip = nullptr;
+            rnp_key_handle_t key = nullptr;
+            if (rnp_identifier_iterator_next(it, &grip) == RNP_SUCCESS && grip) {
+                if (rnp_locate_key(ffi, "grip", grip, &key) != RNP_SUCCESS || !key) {
+                    rnp_identifier_iterator_destroy(it);
+                    rnp_op_sign_destroy(sign_op);
+                    rnp_output_destroy(sig_output);
+                    rnp_input_destroy(data_input);
+                    rnp_ffi_destroy(ffi);
+                    throw std::runtime_error("Failed to locate company key");
+                }
+            }
+            rnp_identifier_iterator_destroy(it);
+            
+            if (!key) {
+                rnp_op_sign_destroy(sign_op);
+                rnp_output_destroy(sig_output);
+                rnp_input_destroy(data_input);
+                rnp_ffi_destroy(ffi);
+                throw std::runtime_error("No company key found");
+            }
+            
+            if (rnp_op_sign_add_signature(sign_op, key, nullptr) != RNP_SUCCESS) {
+                rnp_key_handle_destroy(key);
+                rnp_op_sign_destroy(sign_op);
+                rnp_output_destroy(sig_output);
+                rnp_input_destroy(data_input);
+                rnp_ffi_destroy(ffi);
+                throw std::runtime_error("Failed to add company signer");
+            }
+            
+            if (rnp_op_sign_execute(sign_op) != RNP_SUCCESS) {
+                rnp_key_handle_destroy(key);
+                rnp_op_sign_destroy(sign_op);
+                rnp_output_destroy(sig_output);
+                rnp_input_destroy(data_input);
+                rnp_ffi_destroy(ffi);
+                throw std::runtime_error("Company signing failed");
+            }
+            
+            uint8_t* sig_buf = nullptr;
+            size_t sig_len = 0;
+            if (rnp_output_memory_get_buf(sig_output, &sig_buf, &sig_len, false) != RNP_SUCCESS) {
+                rnp_key_handle_destroy(key);
+                rnp_op_sign_destroy(sign_op);
+                rnp_output_destroy(sig_output);
+                rnp_input_destroy(data_input);
+                rnp_ffi_destroy(ffi);
+                throw std::runtime_error("Failed to get company signature");
+            }
+            
+            QByteArray signature(reinterpret_cast<const char*>(sig_buf), sig_len);
+            signatureHex = signature.toHex();
+            
+            rnp_key_handle_destroy(key);
+            rnp_op_sign_destroy(sign_op);
+            rnp_output_destroy(sig_output);
+            rnp_input_destroy(data_input);
+            rnp_ffi_destroy(ffi);
+        }
+        
+        // Create ticket QR code: TICKET:bookingRef:timestamp:companySignature
+        QString ticketData = QString("TICKET:%1:%2:%3")
+            .arg(ticket.bookingReference())
+            .arg(timestamp)
+            .arg(signatureHex);
+        
+        QImage qrImage = QRCodeGenerator::generateQRCode(ticketData, 280);
+        QPixmap qrPixmap = QPixmap::fromImage(qrImage);
+        qrImageLabel_->setPixmap(qrPixmap);
+        
+    } catch (const std::exception& e) {
+        qWarning() << "Failed to create signed ticket QR:" << e.what();
+        
+        // Fallback to simple booking reference QR
+        QImage qrImage = QRCodeGenerator::generateQRCode(ticket.bookingReference(), 280);
+        QPixmap qrPixmap = QPixmap::fromImage(qrImage);
+        qrImageLabel_->setPixmap(qrPixmap);
+    }
     
     // Show overlay centered on the page
     qrOverlay_->setGeometry(0, 0, width(), height());

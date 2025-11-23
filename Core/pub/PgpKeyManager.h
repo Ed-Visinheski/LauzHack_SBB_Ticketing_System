@@ -38,6 +38,9 @@ public:
     std::string exportPublicKeyArmored() const;
     std::string exportSecretKeyArmored() const;
 
+    // Sign data with the private key and return the signature
+    std::string signData(const std::string& data) const;
+
 private:
     rnp_ffi_t   m_ffi = nullptr;
     std::string m_userId;

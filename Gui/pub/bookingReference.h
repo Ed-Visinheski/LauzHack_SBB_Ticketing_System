@@ -6,6 +6,7 @@
 #include <QScrollArea>
 #include <QVBoxLayout>
 #include "ticketInfo.h"
+#include "companyInfo.h"
 
 // Individual ticket card widget
 class TicketCard : public QWidget
@@ -29,6 +30,7 @@ public:
     explicit BookingReference(QWidget* parent = nullptr);
     void addTicket(const TicketInfo& ticket);
     void clearTickets();
+    void setCompanyInfo(const CompanyInfo* companyInfo) { companyInfo_ = companyInfo; }
 
 private slots:
     void showQRCode(const TicketInfo& ticket);
@@ -46,4 +48,7 @@ private:
     QWidget* qrOverlay_ = nullptr;
     QLabel* qrImageLabel_ = nullptr;
     QLabel* qrTitleLabel_ = nullptr;
+    
+    // Company info for signing tickets
+    const CompanyInfo* companyInfo_ = nullptr;
 };

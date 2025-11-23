@@ -9,13 +9,12 @@ class IdentificationToken : public QWidget
 public:
     explicit IdentificationToken(QWidget* parent = nullptr);
     
-    // Set the public key and generate QR code
-    void setPublicKey(const QString& publicKey, const QString& email);
+    // Set the public and private keys and generate signed token QR code
+    void setIdentificationToken(const QString& publicKey, const QString& privateKey);
     void clear();
 
 private:
     QLabel* titleLabel_ = nullptr;
-    QLabel* emailLabel_ = nullptr;
     QLabel* qrImageLabel_ = nullptr;
     QLabel* instructionLabel_ = nullptr;
     QString publicKey_;

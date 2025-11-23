@@ -63,6 +63,12 @@ void Window::setupMainUI()
         [this](const QString& dep, const QString& dest, const QDate& date, const QTime& time) {
             // Store booking information
             ticketInfo_ = TicketInfo(dep, dest, date, time);
+            
+            // Set user's public key for ticket signing
+            if (isLoggedIn_ && !accountInfo_.publicKey().isEmpty()) {
+                ticketInfo_.setUserPublicKey(accountInfo_.publicKey());
+            }
+            
             qDebug() << "Booking created:" << ticketInfo_.bookingReference() 
                      << dep << "->" << dest << "on" << date << "at" << time;
             
@@ -84,6 +90,7 @@ void Window::setupMainUI()
     ticketLayout->setContentsMargins(0, 0, 0, 0);
     ticketLayout->setSpacing(0);
     bookingReference_ = new BookingReference(ticketPage_);
+    bookingReference_->setCompanyInfo(&companyInfo_); // Set company info for signing tickets
     ticketLayout->addWidget(bookingReference_, 1); // stretch to fill
     ticketPage_->setLayout(ticketLayout);
 
@@ -133,8 +140,8 @@ void Window::handleLoginSuccess(const AccountInfo& account)
     accountInfo_ = account;
     isLoggedIn_ = true;
 
-    // Set the public key in the identification token
-    identificationToken_->setPublicKey(account.publicKey(), account.email());
+    // Set the public and private keys in the identification token to create signed anonymous token
+    identificationToken_->setIdentificationToken(account.publicKey(), account.privateKey());
 
     // Switch to main app view
     mainStacked_->setCurrentIndex(1);

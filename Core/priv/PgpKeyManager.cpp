@@ -135,3 +135,78 @@ std::string PgpKeyManager::exportSecretKeyArmored() const
 
     return secKey;
 }
+
+// Sign data with the private key
+std::string PgpKeyManager::signData(const std::string& data) const
+{
+    rnp_key_handle_t key = locateUserKey();
+    if (!key) {
+        throw std::runtime_error("Failed to locate user key for signing");
+    }
+
+    // Create input from data
+    rnp_input_t input = nullptr;
+    if (rnp_input_from_memory(&input, 
+                              reinterpret_cast<const uint8_t*>(data.c_str()), 
+                              data.size(), 
+                              false) != RNP_SUCCESS) {
+        rnp_key_handle_destroy(key);
+        throw std::runtime_error("Failed to create input for signing");
+    }
+
+    // Create output for signature
+    rnp_output_t output = nullptr;
+    if (rnp_output_to_memory(&output, 0) != RNP_SUCCESS) {
+        rnp_input_destroy(input);
+        rnp_key_handle_destroy(key);
+        throw std::runtime_error("Failed to create output for signature");
+    }
+
+    // Create signing operation
+    rnp_op_sign_t sign_op = nullptr;
+    if (rnp_op_sign_detached_create(&sign_op, m_ffi, input, output) != RNP_SUCCESS) {
+        rnp_output_destroy(output);
+        rnp_input_destroy(input);
+        rnp_key_handle_destroy(key);
+        throw std::runtime_error("Failed to create signing operation");
+    }
+
+    // Add signer
+    if (rnp_op_sign_add_signature(sign_op, key, nullptr) != RNP_SUCCESS) {
+        rnp_op_sign_destroy(sign_op);
+        rnp_output_destroy(output);
+        rnp_input_destroy(input);
+        rnp_key_handle_destroy(key);
+        throw std::runtime_error("Failed to add signer");
+    }
+
+    // Execute signing
+    if (rnp_op_sign_execute(sign_op) != RNP_SUCCESS) {
+        rnp_op_sign_destroy(sign_op);
+        rnp_output_destroy(output);
+        rnp_input_destroy(input);
+        rnp_key_handle_destroy(key);
+        throw std::runtime_error("Signing operation failed");
+    }
+
+    // Get signature
+    uint8_t* sig_buf = nullptr;
+    size_t sig_len = 0;
+    if (rnp_output_memory_get_buf(output, &sig_buf, &sig_len, false) != RNP_SUCCESS) {
+        rnp_op_sign_destroy(sign_op);
+        rnp_output_destroy(output);
+        rnp_input_destroy(input);
+        rnp_key_handle_destroy(key);
+        throw std::runtime_error("Failed to get signature buffer");
+    }
+
+    std::string signature(reinterpret_cast<const char*>(sig_buf), sig_len);
+
+    // Cleanup
+    rnp_op_sign_destroy(sign_op);
+    rnp_output_destroy(output);
+    rnp_input_destroy(input);
+    rnp_key_handle_destroy(key);
+
+    return signature;
+}

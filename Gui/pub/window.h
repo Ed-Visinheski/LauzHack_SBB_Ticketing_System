@@ -10,6 +10,7 @@
 #include "logInPage.h"
 #include "accountInfo.h"
 #include "identificationToken.h"
+#include "companyInfo.h"
 
 class Window : public QWidget
 {
@@ -35,5 +36,6 @@ private:
     IdentificationToken* identificationToken_ = nullptr;
     TicketInfo ticketInfo_;
     AccountInfo accountInfo_;
+    CompanyInfo companyInfo_;
     bool isLoggedIn_ = false;
 };
