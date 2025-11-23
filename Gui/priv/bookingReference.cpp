@@ -2,133 +2,265 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QFrame>
+#include <QPixmap>
+#include <QGraphicsDropShadowEffect>
+#include <QTimer>
+#include <QScrollArea>
+
+// ============ TicketCard Implementation ============
+
+TicketCard::TicketCard(const TicketInfo& ticket, QWidget* parent)
+    : QWidget(parent)
+    , ticket_(ticket)
+{
+
+    auto mainLayout = new QVBoxLayout(this);
+    // mainLayout->setContentsMargins(16, 16, 16, 16);
+    // mainLayout->setSpacing(12);
+
+    // Header: Booking reference and status
+    auto headerLayout = new QHBoxLayout();
+    auto refLabel = new QLabel("Ref: " + ticket_.bookingReference(), this);
+    refLabel->setStyleSheet("font-size: 20px; font-weight: bold; color: #ec0001; border: none;");
+    
+    headerLayout->addWidget(refLabel);
+    headerLayout->addStretch();
+
+    // Route info with arrow
+    auto routeLayout = new QHBoxLayout();
+    routeLayout->setSpacing(12);
+    
+    auto fromLabel = new QLabel(ticket_.departure(), this);
+    fromLabel->setStyleSheet("font-size: 16px; font-weight: bold; color: #333; border: none;");
+    
+    auto arrowLabel = new QLabel("→", this);
+    arrowLabel->setStyleSheet("font-size: 20px; color: #999; border: none;");
+    
+    auto toLabel = new QLabel(ticket_.destination(), this);
+    toLabel->setStyleSheet("font-size: 16px; font-weight: bold; color: #333; border: none;");
+    
+    routeLayout->addWidget(fromLabel);
+    routeLayout->addWidget(arrowLabel);
+    routeLayout->addWidget(toLabel);
+    routeLayout->addStretch();
+
+    // Date and time row
+    auto dateTimeLayout = new QHBoxLayout();
+    dateTimeLayout->setSpacing(20);
+    
+    auto dateIcon = new QLabel("📅", this);
+    dateIcon->setStyleSheet("font-size: 14px; border: none;");
+    auto dateLabel = new QLabel(ticket_.date().toString("MMM d, yyyy"), this);
+    dateLabel->setStyleSheet("font-size: 14px; color: #666; border: none;");
+    
+    auto timeIcon = new QLabel("🕐", this);
+    timeIcon->setStyleSheet("font-size: 14px; border: none;");
+    auto timeLabel = new QLabel(ticket_.time().toString("hh:mm"), this);
+    timeLabel->setStyleSheet("font-size: 14px; color: #666; border: none;");
+    
+    dateTimeLayout->addWidget(dateIcon);
+    dateTimeLayout->addWidget(dateLabel);
+    dateTimeLayout->addSpacing(10);
+    dateTimeLayout->addWidget(timeIcon);
+    dateTimeLayout->addWidget(timeLabel);
+    dateTimeLayout->addStretch();
+
+    // Divider line
+    auto divider = new QFrame(this);
+    divider->setFrameShape(QFrame::HLine);
+    divider->setStyleSheet("background-color: #e0e0e0; border: none;");
+    divider->setFixedHeight(1);
+
+    // QR Code button
+    auto qrButton = new QPushButton("View QR Code", this);
+    qrButton->setFixedHeight(36);
+    qrButton->setStyleSheet(
+        "QPushButton { "
+        "  background-color: #ec0001; color: white; font-weight: bold; "
+        "  font-size: 13px; border: none; border-radius: 6px; "
+        "} "
+        "QPushButton:hover { "
+        "  background-color: #d00001; "
+        "}"
+    );
+    connect(qrButton, &QPushButton::clicked, this, [this]() {
+        emit qrCodeRequested(ticket_);
+    });
+
+    // Add to main layout
+    mainLayout->addLayout(headerLayout);
+    mainLayout->addLayout(routeLayout);
+    mainLayout->addLayout(dateTimeLayout);
+    mainLayout->addWidget(divider);
+    mainLayout->addWidget(qrButton);
+
+    setLayout(mainLayout);
+}
+
+// ============ BookingReference Implementation ============
 
 BookingReference::BookingReference(QWidget* parent)
     : QWidget(parent)
 {
-    setStyleSheet("background-color: white; border-radius: 8px;");
-
     auto mainLayout = new QVBoxLayout(this);
-    mainLayout->setContentsMargins(20, 20, 20, 20);
-    mainLayout->setSpacing(16);
+    mainLayout->setContentsMargins(0, 0, 0, 0);
+    mainLayout->setSpacing(0);
 
     // Title
-    auto titleLabel = new QLabel("Your Ticket", this);
-    titleLabel->setStyleSheet("font-size: 20px; font-weight: bold; color: #ec0001;");
-    titleLabel->setAlignment(Qt::AlignCenter);
+    auto titleLabel = new QLabel("My Tickets", this);
+    titleLabel->setStyleSheet("font-size: 20px; font-weight: bold; color: #333; padding: 16px;");
 
-    // Booking Reference (large, centered)
-    referenceLabel_ = new QLabel(this);
-    referenceLabel_->setStyleSheet(
-        "font-size: 32px; font-weight: bold; color: black; "
-        "background-color: #f5f5f5; padding: 20px; border-radius: 8px;"
+    // Scroll area for tickets
+    scrollArea_ = new QScrollArea(this);
+    scrollArea_->setWidgetResizable(true);
+    scrollArea_->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    scrollArea_->setStyleSheet(
+        "QScrollArea { border: none; background-color: transparent; } "
+        "QScrollBar:vertical { "
+        "  border: none; background: #f5f5f5; width: 8px; border-radius: 4px; "
+        "} "
+        "QScrollBar::handle:vertical { "
+        "  background: #ccc; border-radius: 4px; min-height: 20px; "
+        "} "
+        "QScrollBar::handle:vertical:hover { "
+        "  background: #999; "
+        "}"
     );
-    referenceLabel_->setAlignment(Qt::AlignCenter);
-    referenceLabel_->hide();
 
-    // Separator line
-    auto separator = new QFrame(this);
-    separator->setFrameShape(QFrame::HLine);
-    separator->setStyleSheet("background-color: #ccc;");
+    // Container widget inside scroll area
+    ticketContainer_ = new QWidget();
+    ticketLayout_ = new QVBoxLayout(ticketContainer_);
+    ticketLayout_->setContentsMargins(16, 0, 16, 16);
+    ticketLayout_->setSpacing(16);
+    ticketLayout_->addStretch();
+    ticketContainer_->setLayout(ticketLayout_);
+    
+    scrollArea_->setWidget(ticketContainer_);
 
-    // Trip details container
-    auto detailsLayout = new QVBoxLayout();
-    detailsLayout->setSpacing(12);
-
-    // Departure
-    auto depContainer = new QVBoxLayout();
-    auto depTitle = new QLabel("From:", this);
-    depTitle->setStyleSheet("font-size: 12px; color: #666;");
-    departureLabel_ = new QLabel(this);
-    departureLabel_->setStyleSheet("font-size: 18px; font-weight: bold; color: black;");
-    depContainer->addWidget(depTitle);
-    depContainer->addWidget(departureLabel_);
-
-    // Destination
-    auto destContainer = new QVBoxLayout();
-    auto destTitle = new QLabel("To:", this);
-    destTitle->setStyleSheet("font-size: 12px; color: #666;");
-    destinationLabel_ = new QLabel(this);
-    destinationLabel_->setStyleSheet("font-size: 18px; font-weight: bold; color: black;");
-    destContainer->addWidget(destTitle);
-    destContainer->addWidget(destinationLabel_);
-
-    // Date and time in one row
-    auto dateTimeRow = new QHBoxLayout();
-    dateTimeRow->setSpacing(20);
-
-    auto dateContainer = new QVBoxLayout();
-    auto dateTitle = new QLabel("Date:", this);
-    dateTitle->setStyleSheet("font-size: 12px; color: #666;");
-    dateLabel_ = new QLabel(this);
-    dateLabel_->setStyleSheet("font-size: 16px; font-weight: bold; color: black;");
-    dateContainer->addWidget(dateTitle);
-    dateContainer->addWidget(dateLabel_);
-
-    auto timeContainer = new QVBoxLayout();
-    auto timeTitle = new QLabel("Time:", this);
-    timeTitle->setStyleSheet("font-size: 12px; color: #666;");
-    timeLabel_ = new QLabel(this);
-    timeLabel_->setStyleSheet("font-size: 16px; font-weight: bold; color: black;");
-    timeContainer->addWidget(timeTitle);
-    timeContainer->addWidget(timeLabel_);
-
-    dateTimeRow->addLayout(dateContainer);
-    dateTimeRow->addLayout(timeContainer);
-
-    detailsLayout->addLayout(depContainer);
-    detailsLayout->addLayout(destContainer);
-    detailsLayout->addLayout(dateTimeRow);
-
-    // No ticket message (shown when no booking)
-    noTicketLabel_ = new QLabel("No active booking.\nBook a ticket from the Home page.", this);
-    noTicketLabel_->setStyleSheet("font-size: 16px; color: #666;");
+    // No tickets message
+    noTicketLabel_ = new QLabel("No tickets yet\n\nBook your first ticket from the Home page", this);
+    noTicketLabel_->setStyleSheet("font-size: 15px; color: #999; padding: 40px;");
     noTicketLabel_->setAlignment(Qt::AlignCenter);
 
-    // Add to main layout
     mainLayout->addWidget(titleLabel);
-    mainLayout->addWidget(referenceLabel_);
-    mainLayout->addWidget(separator);
-    mainLayout->addLayout(detailsLayout);
+    mainLayout->addWidget(scrollArea_, 1);
     mainLayout->addWidget(noTicketLabel_);
-    mainLayout->addStretch();
 
     setLayout(mainLayout);
-
-    // Initially hide ticket details
-    referenceLabel_->hide();
-    separator->hide();
-    departureLabel_->hide();
-    destinationLabel_->hide();
-    dateLabel_->hide();
-    timeLabel_->hide();
+    
+    scrollArea_->hide();
+    
+    // Setup centered QR overlay
+    setupQROverlay();
 }
 
-void BookingReference::updateTicket(const TicketInfo& ticket)
+void BookingReference::setupQROverlay()
+{
+    // Create centered QR overlay
+    qrOverlay_ = new QWidget(this);
+    qrOverlay_->setStyleSheet("background-color: rgba(0, 0, 0, 0.95);");
+    qrOverlay_->hide();
+    
+    auto overlayLayout = new QVBoxLayout(qrOverlay_);
+    overlayLayout->setContentsMargins(40, 60, 40, 60);
+    overlayLayout->setSpacing(24);
+    
+    overlayLayout->addStretch(1);
+    
+    // Title
+    qrTitleLabel_ = new QLabel("Scan Ticket", qrOverlay_);
+    qrTitleLabel_->setStyleSheet("font-size: 24px; font-weight: bold; color: white;");
+    qrTitleLabel_->setAlignment(Qt::AlignCenter);
+    overlayLayout->addWidget(qrTitleLabel_);
+    
+    overlayLayout->addSpacing(20);
+    
+    // QR Code image
+    qrImageLabel_ = new QLabel(qrOverlay_);
+    qrImageLabel_->setAlignment(Qt::AlignCenter);
+    qrImageLabel_->setStyleSheet("background-color: white; padding: 20px; border-radius: 12px;");
+    qrImageLabel_->setFixedSize(320, 320);
+    
+    QPixmap qrPixmap("Icons/QR_Code_temp.png");
+    if (!qrPixmap.isNull()) {
+        qrImageLabel_->setPixmap(qrPixmap.scaled(280, 280, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    }
+    
+    overlayLayout->addWidget(qrImageLabel_, 0, Qt::AlignCenter);
+    
+    overlayLayout->addSpacing(20);
+    
+    // Close button
+    auto closeButton = new QPushButton("Close", qrOverlay_);
+    closeButton->setFixedSize(200, 50);
+    closeButton->setStyleSheet(
+        "QPushButton { "
+        "  background-color: white; color: black; font-weight: bold; "
+        "  font-size: 16px; border: none; border-radius: 8px; "
+        "} "
+        "QPushButton:hover { "
+        "  background-color: #f5f5f5; "
+        "}"
+    );
+    connect(closeButton, &QPushButton::clicked, this, &BookingReference::hideQRCode);
+    
+    auto buttonLayout = new QHBoxLayout();
+    buttonLayout->addStretch();
+    buttonLayout->addWidget(closeButton);
+    buttonLayout->addStretch();
+    overlayLayout->addLayout(buttonLayout);
+    
+    overlayLayout->addStretch(1);
+}
+
+void BookingReference::showQRCode(const TicketInfo& ticket)
+{
+    // Update title with booking reference
+    qrTitleLabel_->setText("Ticket: " + ticket.bookingReference());
+    
+    // Show overlay centered on the page
+    qrOverlay_->setGeometry(0, 0, width(), height());
+    qrOverlay_->raise();
+    qrOverlay_->show();
+}
+
+void BookingReference::hideQRCode()
+{
+    qrOverlay_->hide();
+}
+
+void BookingReference::addTicket(const TicketInfo& ticket)
 {
     if (!ticket.isValid()) {
-        // No valid ticket, show placeholder
-        referenceLabel_->hide();
-        departureLabel_->hide();
-        destinationLabel_->hide();
-        dateLabel_->hide();
-        timeLabel_->hide();
-        noTicketLabel_->show();
         return;
     }
 
-    // Update labels with ticket data
-    referenceLabel_->setText(ticket.bookingReference());
-    departureLabel_->setText(ticket.departure());
-    destinationLabel_->setText(ticket.destination());
-    dateLabel_->setText(ticket.date().toString("dddd, MMMM d, yyyy"));
-    timeLabel_->setText(ticket.time().toString("hh:mm"));
-
-    // Show ticket details, hide placeholder
-    referenceLabel_->show();
-    departureLabel_->show();
-    destinationLabel_->show();
-    dateLabel_->show();
-    timeLabel_->show();
+    // Hide no ticket message, show scroll area
     noTicketLabel_->hide();
+    scrollArea_->show();
+
+    // Create new ticket card
+    auto ticketCard = new TicketCard(ticket, ticketContainer_);
+    
+    // Connect QR code signal
+    connect(ticketCard, &TicketCard::qrCodeRequested, this, &BookingReference::showQRCode);
+    
+    // Insert at the top (before the stretch)
+    ticketLayout_->insertWidget(0, ticketCard);
+}
+
+void BookingReference::clearTickets()
+{
+    // Remove all ticket cards
+    while (ticketLayout_->count() > 1) { // Keep the stretch
+        auto item = ticketLayout_->takeAt(0);
+        if (item->widget()) {
+            item->widget()->deleteLater();
+        }
+        delete item;
+    }
+    
+    // Show no ticket message
+    scrollArea_->hide();
+    noTicketLabel_->show();
 }

@@ -38,8 +38,8 @@ Window::Window(QWidget* parent)
             qDebug() << "Booking created:" << ticketInfo_.bookingReference() 
                      << dep << "->" << dest << "on" << date << "at" << time;
             
-            // Update the booking reference display
-            bookingReference_->updateTicket(ticketInfo_);
+            // Add ticket to the list
+            bookingReference_->addTicket(ticketInfo_);
             
             // Clear the form
             locationSelection_->clear();
@@ -51,13 +51,12 @@ Window::Window(QWidget* parent)
     ticketPage_ = new QWidget(this);
     ticketPage_->setStyleSheet("background-color: #e3f2fd;"); // light blue
 
-    // Add BookingReference to ticket page
+    // Add BookingReference to ticket page (full width scrollable)
     auto ticketLayout = new QVBoxLayout(ticketPage_);
-    ticketLayout->setContentsMargins(20, 20, 20, 20);
+    ticketLayout->setContentsMargins(0, 0, 0, 0);
+    ticketLayout->setSpacing(0);
     bookingReference_ = new BookingReference(ticketPage_);
-    bookingReference_->setMaximumWidth(400);
-    ticketLayout->addWidget(bookingReference_, 0, Qt::AlignCenter | Qt::AlignTop);
-    ticketLayout->addStretch();
+    ticketLayout->addWidget(bookingReference_, 1); // stretch to fill
     ticketPage_->setLayout(ticketLayout);
 
     idPage_ = new QWidget(this);
