@@ -13,8 +13,36 @@ Window::Window(QWidget* parent)
     setAutoFillBackground(true); 
     setPalette(pal);
 
-    // Top bar (always visible)
-    topBar_ = new TopBar(this);
+    // Create main stacked widget for login vs app
+    mainStacked_ = new QStackedWidget(this);
+
+    // Create login page
+    loginPage_ = new LoginPage(this);
+    connect(loginPage_, &LoginPage::loginSuccessful, this, &Window::handleLoginSuccess);
+
+    // Add login page as first view
+    mainStacked_->addWidget(loginPage_);  // index 0
+
+    // Setup main UI (will be shown after login)
+    setupMainUI();
+
+    // Start with login page
+    mainStacked_->setCurrentIndex(0);
+
+    // Main window layout
+    auto windowLayout = new QVBoxLayout(this);
+    windowLayout->setContentsMargins(0, 0, 0, 0);
+    windowLayout->addWidget(mainStacked_);
+    setLayout(windowLayout);
+}
+
+void Window::setupMainUI()
+{
+    // Create container for main app
+    auto mainAppWidget = new QWidget(this);
+
+    // Top bar (always visible in main app)
+    topBar_ = new TopBar(mainAppWidget);
     topBar_->setFixedHeight(64);
 
     // Create three persistent pages with different background colors
@@ -62,6 +90,14 @@ Window::Window(QWidget* parent)
     idPage_ = new QWidget(this);
     idPage_->setStyleSheet("background-color: #fff3e0;"); // light orange
 
+    // Add IdentificationToken to ID page
+    auto idLayout = new QVBoxLayout(idPage_);
+    idLayout->setContentsMargins(0, 0, 0, 0);
+    idLayout->setSpacing(0);
+    identificationToken_ = new IdentificationToken(idPage_);
+    idLayout->addWidget(identificationToken_, 1); // stretch to fill
+    idPage_->setLayout(idLayout);
+
     // Stacked widget to hold pages (preserves state when switching)
     stacked_ = new QStackedWidget(this);
     stacked_->addWidget(homePage_);    // index 0
@@ -86,5 +122,24 @@ Window::Window(QWidget* parent)
     mainLayout->addWidget(stacked_, 1); // stretch to fill middle
     mainLayout->addWidget(navBar_);
 
-    setLayout(mainLayout);
+    mainAppWidget->setLayout(mainLayout);
+
+    // Add main app as second view
+    mainStacked_->addWidget(mainAppWidget);  // index 1
+}
+
+void Window::handleLoginSuccess(const AccountInfo& account)
+{
+    accountInfo_ = account;
+    isLoggedIn_ = true;
+
+    // Set the public key in the identification token
+    identificationToken_->setPublicKey(account.publicKey(), account.email());
+
+    // Switch to main app view
+    mainStacked_->setCurrentIndex(1);
+
+    qDebug() << "User logged in:" << account.email();
+    qDebug() << "Public key length:" << account.publicKey().length();
+    qDebug() << "Private key length:" << account.privateKey().length();
 }
